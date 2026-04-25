@@ -219,40 +219,48 @@ agent.tool("call_llm",
            ),
            cost_fn=lambda r: r.usage.input_tokens  * 0.000003
                            + r.usage.output_tokens * 0.000015)
-
-# Now every LLM call goes through Shape:
-with agent.explore() as ctx:
-    response = ctx.call("call_llm", prompt="analyze this customer")  # $0.02
-    plan = ctx.call("call_llm", prompt="what should we do?")         # $0.03
-    ctx.call("call_llm", prompt="...")  # budget gate → BLOCKED. No tokens burned.
 ```
 
 `cost_fn` takes the tool's return value and returns a dollar amount. The cost is recorded *after* execution and affects the *next* call's budget gate — same as a credit card: the purchase that maxes you out goes through, the next one declines.
 
-LLM and tool costs share one budget pool:
+### Real Agent Loop
+
+In a real agent, the LLM decides which tools to call. Shape governs every call — both the LLM thinking and the tools it requests:
 
 ```python
 agent = Agent("my-agent", budget=5.00)
 
-# LLM call — cost tracked automatically via cost_fn
+# Wrap the LLM itself — inference cost tracked via cost_fn
 agent.tool("call_llm", effect=ToolEffect.READ, fn=call_claude,
            cost_fn=lambda r: r.usage.total_tokens * 0.00003)
 
-# Regular tools — cost passed manually, same budget
+# Wrap the tools the LLM can request
 agent.tool("read_db",       effect=ToolEffect.READ,         fn=read_db_fn)
 agent.tool("send_email",    effect=ToolEffect.IRREVERSIBLE, fn=send_email_fn)
 agent.tool("update_record", effect=ToolEffect.REVERSIBLE,   fn=update_fn,
            compensation=undo_update_fn)
 
+# EXPLORE — LLM gathers context, Shape governs every call
 with agent.explore() as ctx:
-    data = ctx.call("read_db", query="...")        # $0.00
-    analysis = ctx.call("call_llm", prompt="...")   # $0.02 (cost_fn)
+    while True:
+        response = ctx.call("call_llm", prompt=history)     # Shape gate → cost_fn
+        if response.stop_reason == "tool_use":
+            result = ctx.call(response.tool_name, **response.tool_args)  # Shape gate
+            history.append(result)
+        else:
+            break
 
+# COMMIT — LLM executes, Shape enforces transactions
 with agent.commit() as tx:
-    tx.call("update_record", cost=0.01, id="C-123") # $0.01 (manual)
-    tx.call("call_llm", prompt="draft email")        # $0.02 (cost_fn)
-    tx.call("send_email", cost=0.10, to="alice@...")  # $0.10 (manual)
-    # total: $0.15 — one budget, one gate, all tracked
+    while True:
+        response = tx.call("call_llm", prompt=history)      # Shape gate → cost_fn
+        if response.stop_reason == "tool_use":
+            tx.call(response.tool_name, cost=0.10, **response.tool_args)  # Shape gate
+        else:
+            break
+    # if any step fails → earlier steps compensated automatically
+
+# One budget pool. LLM inference + tool costs. One gate for everything.
 ```
 
 ## How Shape Compares

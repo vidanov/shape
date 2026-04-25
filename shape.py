@@ -1,7 +1,7 @@
 """
 Shape — Agent governance: phases + transactions + budget gates + proof traces + rule DSL.
 
-Zero dependencies. Single file. 466 LOC.
+Zero dependencies. Single file.
 Wraps any tool-calling agent with external authority over permission, cost, and atomicity.
 """
 

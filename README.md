@@ -2,7 +2,7 @@
 
 **Guardrails for AI agents that actually work.**
 
-One file. Zero dependencies. 466 lines of Python.
+One file. Zero dependencies. Pure Python.
 
 ```
 Your agent just mass-emailed 10,000 customers with a hallucinated discount.
@@ -217,7 +217,7 @@ Between December 2025 and March 2026, at least four independent groups arrived a
 
 Nobody combined phases + transactions + budget gates + proof traces in one place.
 
-Shape does. In 466 lines.
+Shape does. In a single file.
 
 ## License
 

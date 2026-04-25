@@ -93,7 +93,7 @@ Every tool call should produce a structured record of *why* it was permitted. No
 
 **Zero dependencies means zero excuses.** One Python file. Copy it into your project. No package manager, no config server, no vendor lock-in.
 
-**Small is a feature.** 466 lines is auditable in an afternoon. You can read every line of code that governs your agent. Try that with a managed service.
+**Small is a feature.** A single file is auditable in an afternoon. You can read every line of code that governs your agent. Try that with a managed service.
 
 ## Who this is for
 

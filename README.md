@@ -229,6 +229,32 @@ with agent.explore() as ctx:
 
 `cost_fn` takes the tool's return value and returns a dollar amount. The cost is recorded *after* execution and affects the *next* call's budget gate — same as a credit card: the purchase that maxes you out goes through, the next one declines.
 
+LLM and tool costs share one budget pool:
+
+```python
+agent = Agent("my-agent", budget=5.00)
+
+# LLM call — cost tracked automatically via cost_fn
+agent.tool("call_llm", effect=ToolEffect.READ, fn=call_claude,
+           cost_fn=lambda r: r.usage.total_tokens * 0.00003)
+
+# Regular tools — cost passed manually, same budget
+agent.tool("read_db",       effect=ToolEffect.READ,         fn=read_db_fn)
+agent.tool("send_email",    effect=ToolEffect.IRREVERSIBLE, fn=send_email_fn)
+agent.tool("update_record", effect=ToolEffect.REVERSIBLE,   fn=update_fn,
+           compensation=undo_update_fn)
+
+with agent.explore() as ctx:
+    data = ctx.call("read_db", query="...")        # $0.00
+    analysis = ctx.call("call_llm", prompt="...")   # $0.02 (cost_fn)
+
+with agent.commit() as tx:
+    tx.call("update_record", cost=0.01, id="C-123") # $0.01 (manual)
+    tx.call("call_llm", prompt="draft email")        # $0.02 (cost_fn)
+    tx.call("send_email", cost=0.10, to="alice@...")  # $0.10 (manual)
+    # total: $0.15 — one budget, one gate, all tracked
+```
+
 ## How Shape Compares
 
 | Capability | Galileo | AWS AgentCore | Atomix | Shape |

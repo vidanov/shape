@@ -403,20 +403,20 @@ const RULES = [
 const SCEN = {
   s1: {
     label: '01 happy path',
-    task: 'Send a welcome email to customer A. Smith (C-1284) after confirming she is gold-tier.',
+    task: 'Send a welcome email to a new customer after confirming they are gold-tier.',
     meta: ['tools: 4','rules: 4','starting budget: $0.00'],
     starting_budget: 0,
     steps:[
       {phase:'explore', intent:'Pull the customer record so we know who we are dealing with.',
         tool:'lookup_customer', args:'id="C-1284"', effect:'read', cost:0,
         verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ tools.'},
-      {phase:'decide', intent:'Check whether A. Smith qualifies for the welcome flow.',
+      {phase:'decide', intent:'Check whether the customer qualifies for the welcome flow.',
         tool:'evaluate_eligibility', args:'tier="gold"', effect:'read', cost:0,
         verdict:'allow', ruleIdx:null, reason:'DECIDE permits READ. No side effects yet.'},
       {phase:'decide', intent:'Propose the action so a human (or rule) can review before COMMIT.',
         tool:'propose', args:'action="welcome_email"', effect:'read', cost:0,
         verdict:'allow', ruleIdx:null, reason:'Proposal recorded — nothing happens to the world.'},
-      {phase:'commit', intent:'Mark A. Smith as welcomed in the CRM (reversible — has compensation).',
+      {phase:'commit', intent:'Mark the customer as welcomed in the CRM (reversible — has compensation).',
         tool:'update_record', args:'id="C-1284" status="welcomed"', effect:'rev', cost:0.01,
         verdict:'allow', ruleIdx:null, reason:'COMMIT permits writes. Reversible — refund/undo registered.'},
       {phase:'commit', intent:'Send the actual email — irreversible, must be approved first.',
@@ -428,19 +428,19 @@ const SCEN = {
   },
   s2: {
     label: '02 phase violation',
-    task: 'A buggy agent tries to email customer A. Smith before reading her record.',
-    meta: ['demonstrates: BLOCK rule','phase: EXPLORE → tries IRREVERSIBLE'],
+    task: 'Agent tries to delete a database record while still in the read-only exploration phase.',
+    meta: ['demonstrates: phase enforcement','EXPLORE blocks all write tools'],
     starting_budget: 0,
     steps:[
-      {phase:'explore', intent:'Look up the customer first.',
-        tool:'lookup_customer', args:'id="C-9120"', effect:'read', cost:0,
+      {phase:'explore', intent:'Read the customer record to check account status.',
+        tool:'get_customer', args:'id="C-9120"', effect:'read', cost:0,
         verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ tools.'},
-      {phase:'explore', intent:'Skip ahead and email her right now.',
-        tool:'send_email', args:'to="a.smith@…" template="promo"', effect:'irr', cost:0,
-        verdict:'block', ruleIdx:0, reason:'Rule 01 fires — send_email is forbidden outside COMMIT.', halt:true},
+      {phase:'explore', intent:'Agent decides to delete the record immediately — without going through DECIDE or COMMIT.',
+        tool:'delete_record', args:'id="C-9120" table="customers"', effect:'irr', cost:0,
+        verdict:'block', ruleIdx:0, reason:'Rule 01 fires — write tools are forbidden in EXPLORE. Must reach COMMIT phase first.', halt:true},
     ],
-    outcome:{kind:'blocked', head:'Agent halted before any side effect.',
-      sub:'Without Shape, the email goes out. With Shape, the phase rule throws — full proof in the trace.'}
+    outcome:{kind:'blocked', head:'Destructive action blocked. No data lost.',
+      sub:'Without Shape, the record is gone. With Shape, the phase rule rejects the call before it executes — and the proof trace records exactly why.'}
   },
   s3: {
     label: '03 transaction rollback',

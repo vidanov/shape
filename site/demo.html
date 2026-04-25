@@ -469,25 +469,25 @@ const SCEN = {
   },
   s4: {
     label: '04 budget gate',
-    task: 'Send promotional emails — but $4.20 is already spent of the $5.00 budget.',
-    meta: ['demonstrates: budget thresholds','starts at 84% spent'],
+    task: 'Agent wants to send 3 promotional emails. Budget is nearly exhausted — $4.20 of $5.00 already spent.',
+    meta: ['demonstrates: budget as control signal','$4.20 / $5.00 = 84% spent'],
     starting_budget: 4.20,
     steps:[
-      {phase:'explore', intent:'Read the campaign list.',
-        tool:'lookup_customer', args:'id="C-2298"', effect:'read', cost:0,
-        verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ. Budget at 84% — DEGRADE active.'},
-      {phase:'decide', intent:'Propose a bulk email blast.',
-        tool:'propose', args:'action="bulk_email"', effect:'read', cost:0,
-        verdict:'allow', ruleIdx:null, reason:'Proposal stored. FORCE_DECIDE pressure rising.'},
-      {phase:'commit', intent:'Send the first email.',
-        tool:'send_email', args:'to="a.smith@…"', effect:'irr', cost:0.10,
-        verdict:'approve', ruleIdx:2, reason:'Rule 03 — irreversible + near budget cap. Human must approve.'},
-      {phase:'commit', intent:'Send a second email.',
-        tool:'send_email', args:'to="ben@…"', effect:'irr', cost:0.10,
-        verdict:'block', ruleIdx:1, reason:'Rule 02 fires — budget ABOVE 90%. All tools blocked.', halt:true},
+      {phase:'explore', intent:'Read the campaign list. Budget at 84% — DEGRADE threshold (50%) already crossed.',
+        tool:'lookup_campaign', args:'segment="promo"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'READ tools always allowed. Budget state: DEGRADE (84% > 50%).'},
+      {phase:'decide', intent:'Propose sending 3 emails. Budget pressure is rising but DECIDE is still read-only.',
+        tool:'propose', args:'action="send 3 promo emails"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'Proposal recorded. Budget state: FORCE_DECIDE (84% > 75%). Agent should reduce scope.'},
+      {phase:'commit', intent:'Send email #1. This costs $0.10 — pushes budget from 84% to 86%.',
+        tool:'send_email', args:'to="a.smith@…" template="promo"', effect:'irr', cost:0.10,
+        verdict:'approve', ruleIdx:2, reason:'Rule 03 — irreversible tool requires approval. Budget now 86%.'},
+      {phase:'commit', intent:'Send email #2. This would push budget to 92% — above the 90% hard stop.',
+        tool:'send_email', args:'to="ben@…" template="promo"', effect:'irr', cost:0.10,
+        verdict:'block', ruleIdx:1, reason:'Rule 02 fires — budget ABOVE 90%. Hard stop. All tools blocked.', halt:true},
     ],
-    outcome:{kind:'blocked', head:'Budget gate stopped the agent.',
-      sub:'Cost is a control signal, not just a log. At 90% spent, every tool is blocked until you intervene.'}
+    outcome:{kind:'blocked', head:'Budget gate stopped the agent at 90%.',
+      sub:'Email #1 sent (86%). Email #2 blocked (would hit 92%). Email #3 never attempted. Cost changed behavior — not just a log line.'}
   },
 };
 
@@ -694,6 +694,7 @@ const INFO = {
   allowed:       { tag:'verdict', body:'<strong>Allowed.</strong> Every call records phase, matching rule, and cost — so you always know <em>why</em> it ran.' },
   compensated:   { tag:'verdict', body:'<strong>Compensated.</strong> A later step failed, so Shape rolled back the earlier effect. Transactional, not best-effort.' },
   budget_warn:   { tag:'budget', body:'<strong>Budget threshold crossed.</strong> Above 50% Shape <em>degrades</em>; 75% forces a decision; 90% is a hard stop. Behavior changes — not just a warning banner.' },
+  budget_block:  { tag:'budget', body:'<strong>Budget hard stop.</strong> The agent hit 90% of its budget. Every tool call is now blocked — read or write. Cost didn\'t just get logged. It changed what the agent can do.' },
   done:          { tag:'done',   body:'<strong>Task finished.</strong> Pick another scenario above to see a different rule fire — or replay this one.' },
 };
 
@@ -807,11 +808,17 @@ async function advance(){
     const before = spent;
     setBudget(spent + step.cost);
     const beforePct = (before/5)*100, nowPct = (spent/5)*100;
-    if (nowPct >= 50 && beforePct < 50) setInfo('budget_warn');
+    if ((nowPct >= 50 && beforePct < 50) || (nowPct >= 75 && beforePct < 75) || (nowPct >= 90 && beforePct < 90)) setInfo('budget_warn');
+  }
+  // On budget block, show what the cost WOULD have been
+  if (step.verdict === 'block' && step.ruleIdx === 1 && step.cost) {
+    const wouldBe = spent + step.cost;
+    setBudget(wouldBe);
   }
 
   // contextual info on verdict / rule
-  if (step.verdict === 'approve') setInfo('approval_req');
+  if (step.verdict === 'block' && step.ruleIdx === 1) setInfo('budget_block');
+  else if (step.verdict === 'approve') setInfo('approval_req');
   else if (step.verdict === 'block') setInfo('blocked');
   else if (step.verdict === 'compensated') setInfo('compensated');
   else if (step.ruleIdx != null) setInfo('rule_fired');

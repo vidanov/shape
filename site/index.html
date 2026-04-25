@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shape — Guardrails for AI Agents That Actually Work</title>
+  <meta name="description" content="One file. Zero dependencies. Phases, transactions, budget gates, and proof traces for any tool-calling AI agent." />
+  <meta name="keywords" content="shape, AI agents, governance, guardrails, tool calling, transactions, budget gates, proof traces" />
+  <meta name="author" content="Alexey Vidanov" />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Shape — Guardrails for AI Agents" />
+  <meta property="og:description" content="One file. Zero dependencies. 466 lines of Python." />
+  <meta property="og:type" content="website" />
+  
+  <!-- Fonts -->
+  <style>
+    @font-face {
+      font-family: 'Inter';
+      src: url('/fonts/inter.woff2') format('woff2');
+      font-weight: 400 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      src: url('/fonts/playfair.woff2') format('woff2');
+      font-weight: 400 500;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      src: url('/fonts/jetbrains.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Navigation Dots -->
+  <nav class="slide-nav" id="slide-nav"></nav>
+
+  <!-- Read Full Article Link -->
+  <a href="/article.html" class="read-full-link">Read the full article →</a>
+  
+  <!-- Signature -->
+  <a href="https://alexey.vidanov.com" target="_blank" rel="noopener" style="position: fixed; bottom: 2rem; left: 2rem; font-family: 'Brush Script MT', cursive; font-size: 1.3rem; color: #9b59b6; opacity: 0.8; text-decoration: none; z-index: 100; transition: opacity 0.2s;">Alexey Vidanov</a>
+
+  <main class="slides-container">
+
+    <!-- Slide 1: Hook -->
+    <section id="slide-1" class="slide" data-scene="intro" data-color="#4a90e2">
+      <div class="slide-content">
+        <h1>Shape</h1>
+        <p class="tagline">Guardrails for AI agents that actually work.</p>
+        <p class="sub" style="margin-top: 1rem; opacity: 0.6;">One file. Zero dependencies. 466 lines of Python.</p>
+      </div>
+      <div class="scroll-hint">↓ Scroll or press arrow keys</div>
+    </section>
+
+    <!-- Slide 2: The Problem -->
+    <section id="slide-2" class="slide" data-scene="chaos" data-color="#f5a623">
+      <div class="slide-content">
+        <p class="sub" style="opacity: 0.5; margin-bottom: 0.5rem;">THE PROBLEM</p>
+        <h2>Agents Have Tools. Nobody Has Control.</h2>
+        <p>AI agents are getting access to databases, APIs, payment systems, and infrastructure.</p>
+        <p><strong>The frameworks that power them optimize for capability. None of them optimize for permission.</strong></p>
+        <p class="sub">No lifecycle phases. No transactions. No budget control. No audit trail.</p>
+        <p class="insight">Your agent just mass-emailed 10,000 customers with a hallucinated discount. It had the tool. It had the permission. Nobody told it to stop.</p>
+      </div>
+    </section>
+
+    <!-- Slide 3: The Solution -->
+    <section id="slide-3" class="slide" data-scene="funnel" data-color="#7ed321">
+      <div class="slide-content" style="background: rgba(15, 15, 18, 0.5) !important;">
+        <p class="sub" style="opacity: 0.5; margin-bottom: 0.5rem;">THE SOLUTION</p>
+        <h2>Four Missing Pieces</h2>
+        
+        <div style="font-size: 1.15rem; line-height: 1.6; margin: 1.5rem 0; pointer-events: none;">
+          <p id="step-1" style="margin: 0.3rem 0; color: #fff; transition: all 0.3s;">1. <strong>Phases</strong> — Explore → Decide → Commit. No writing before reading.</p>
+          <p id="step-2" style="margin: 0.3rem 0; color: #fff; transition: all 0.3s;">2. <strong>Transactions</strong> — All-or-nothing. Fail halfway? Everything rolls back.</p>
+          <p id="step-3" style="margin: 0.3rem 0; color: #fff; transition: all 0.3s;">3. <strong>Budget gates</strong> — Cost changes behavior, not just logs.</p>
+          <p id="step-4" style="margin: 0.3rem 0; color: #fff; transition: all 0.3s;">4. <strong>Proof traces</strong> — Know <em>why</em> every action was allowed.</p>
+        </div>
+        
+        <p class="insight">Shape doesn't fix agent behavior. It constrains it until only safe behavior survives.</p>
+      </div>
+    </section>
+
+    <!-- Slide 4: The Code -->
+    <section id="slide-4" class="slide" data-scene="stability" data-color="#4a90e2">
+      <div class="slide-content">
+        <p class="sub" style="opacity: 0.5; margin-bottom: 0.5rem;">HOW IT WORKS</p>
+        <h2>Rules Anyone Can Read</h2>
+        <pre style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.8; color: #7ed321; margin: 1.5rem 0; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;"><code>BLOCK send_email WHEN phase IS NOT commit
+BLOCK * WHEN budget ABOVE 90%
+REQUIRE APPROVAL FOR * WHEN tool IS irreversible
+FLAG * WHEN time OUTSIDE 09:00-17:00</code></pre>
+        <p class="sub">No Cedar. No Rego. No policy server.<br>Your product manager can read these. Your compliance team can write them.</p>
+      </div>
+    </section>
+
+    <!-- Slide 5: CTA -->
+    <section id="slide-5" class="slide" data-scene="loop" data-color="#bd10e0">
+      <div class="slide-content" style="text-align: center;">
+        <p class="sub" style="opacity: 0.5; margin-bottom: 0.5rem;">GET STARTED</p>
+        <h2>466 Lines. Zero Dependencies.</h2>
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #7ed321; margin: 1.5rem 0;">cp shape.py /your/project/</p>
+        <p style="margin: 2rem 0;">
+          <a href="https://github.com/avidanov/shape" style="display: inline-block; color: #fff; background: rgba(255,255,255,0.1); padding: 1rem 2.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; font-size: 1.1rem;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">GitHub →</a>
+        </p>
+        <p><a href="/article.html" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 1rem;">Read the full article: Why AI Agents Need Guardrails That Aren't Prompts →</a></p>
+      </div>
+    </section>
+
+  </main>
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>

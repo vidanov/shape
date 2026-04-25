@@ -11,6 +11,8 @@ It had the tool. It had the permission. Nobody told it to stop.
 
 Shape prevents this. It wraps any tool-calling agent with hard governance — not guidelines, not prompts, not vibes.
 
+🌐 [Visual explainer](https://vidanov.github.io/shape/) · 📄 [Full article](https://vidanov.github.io/shape/article.html) · 🎮 [Interactive demo](https://vidanov.github.io/shape/demo.html)
+
 ## The Problem
 
 AI agents are getting tool access: databases, APIs, payment systems, infrastructure. The frameworks that power them (LangGraph, CrewAI, Strands) optimize for *capability*. None of them optimize for *permission*.

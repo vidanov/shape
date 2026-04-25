@@ -97,7 +97,7 @@ Every tool call should produce a structured record of *why* it was permitted. No
 
 ## Who this is for
 
-- **Agent developers** who want hard guardrails, not prompt engineering
+- **Agent developers** who want hard governance, not prompt engineering
 - **Platform teams** building internal agent infrastructure
 - **Compliance teams** who need auditable governance they can actually read
 - **Anyone** who's given an AI agent a dangerous tool and felt uneasy about it

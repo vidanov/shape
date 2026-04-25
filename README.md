@@ -202,13 +202,39 @@ agent.tool("any_tool", effect=ToolEffect.READ, fn=any_callable)
 | `agent.decide()` | Enter DECIDE phase (read-only, proposals) |
 | `agent.commit()` | Enter COMMIT phase (transactional) |
 | `agent.traces` | All proof traces |
-| `wrap_tool(agent, name, fn, effect)` | Register + return governed callable |
+| `wrap_tool(agent, name, fn, effect, cost_fn)` | Register + return governed callable |
+
+### Automatic Cost Tracking
+
+Track inference costs (or any cost) automatically from tool results:
+
+```python
+agent.tool("llm_call", effect=ToolEffect.READ, fn=call_llm,
+           cost_fn=lambda result: result.usage.input_tokens * 0.000003
+                                + result.usage.output_tokens * 0.000015)
+```
+
+The budget gate now tracks everything — inference + tool costs — as a single control signal.
+
+## How Shape Compares
+
+| Capability | Galileo | AWS AgentCore | Atomix | Shape |
+|-----------|---------|---------------|--------|-------|
+| Phase enforcement | ✗ | ✗ | ✗ | ✓ |
+| Transactional tool calls | ✗ | ✗ | ✓ (paper) | ✓ |
+| Compensation / rollback | ✗ | ✗ | partial | ✓ |
+| Tool cost as control signal | ✗ | ✗ | ✗ | ✓ |
+| Inference cost as control signal | ✗ | ✗ | ✗ | ✓ |
+| Proof traces (why, not just what) | ✗ | ✗ | ✗ | ✓ |
+| Readable rule DSL | ✗ | Cedar | ✗ | ✓ |
+| Framework coupling | Galileo SDK | AWS only | academic | None |
+| Dependencies | many | AWS SDK | N/A | zero |
 
 ## Testing
 
 ```bash
 python -m pytest test_shape.py -v
-# 54 tests, 0.04s
+# 58 tests
 ```
 
 ## Why This Exists

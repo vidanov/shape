@@ -274,8 +274,9 @@ class Agent:
         self._approval_callback: Optional[Callable[[str, dict], bool]] = None
 
     def tool(self, name: str, effect: ToolEffect = ToolEffect.READ,
-             fn: Optional[Callable] = None, compensation: Optional[Callable] = None):
-        self.tools[name] = {"effect": effect, "fn": fn, "compensation": compensation}
+             fn: Optional[Callable] = None, compensation: Optional[Callable] = None,
+             cost_fn: Optional[Callable] = None):
+        self.tools[name] = {"effect": effect, "fn": fn, "compensation": compensation, "cost_fn": cost_fn}
 
     def rules(self, text: str):
         self._rules.extend(parse_rules(text))
@@ -390,6 +391,16 @@ class Agent:
         trace.result = result
         trace.duration_s = time.monotonic() - (time.monotonic() - trace.duration_s)
 
+        # Auto-record cost from cost_fn if provided
+        if tool_info.get("cost_fn") and self.budget:
+            try:
+                cost = tool_info["cost_fn"](result)
+                if cost and cost > 0:
+                    self.budget.record(cost)
+                    trace.budget_spent = self.budget.spent
+            except Exception:
+                pass  # cost_fn failure should not block execution
+
         if tx and tool_info["effect"] != ToolEffect.READ:
             tx.buffer(tool_name, kwargs, result, tool_info.get("compensation"))
 
@@ -453,9 +464,10 @@ class TransactionContext:
 
 def wrap_tool(agent: Agent, tool_name: str, fn: Callable,
               effect: ToolEffect = ToolEffect.READ,
-              compensation: Optional[Callable] = None) -> Callable:
+              compensation: Optional[Callable] = None,
+              cost_fn: Optional[Callable] = None) -> Callable:
     """Register and return a governed version of any callable."""
-    agent.tool(tool_name, effect=effect, fn=fn, compensation=compensation)
+    agent.tool(tool_name, effect=effect, fn=fn, compensation=compensation, cost_fn=cost_fn)
 
     def governed(**kwargs):
         return agent._execute(tool_name, kwargs)

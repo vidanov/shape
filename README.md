@@ -204,17 +204,30 @@ agent.tool("any_tool", effect=ToolEffect.READ, fn=any_callable)
 | `agent.traces` | All proof traces |
 | `wrap_tool(agent, name, fn, effect, cost_fn)` | Register + return governed callable |
 
-### Automatic Cost Tracking
+### Governing LLM Inference Cost
 
-Track inference costs (or any cost) automatically from tool results:
+By default, Shape governs tool calls — but the LLM itself burns tokens outside Shape's control. The fix: **wrap the LLM call as a Shape tool.**
 
 ```python
-agent.tool("llm_call", effect=ToolEffect.READ, fn=call_llm,
-           cost_fn=lambda result: result.usage.input_tokens * 0.000003
-                                + result.usage.output_tokens * 0.000015)
+# Without wrapping: LLM burns tokens freely, Shape only sees tools
+# With wrapping: Shape governs EVERYTHING
+
+agent.tool("call_llm",
+           effect=ToolEffect.READ,
+           fn=lambda prompt, **kw: claude.messages.create(
+               model="sonnet", messages=[{"role": "user", "content": prompt}]
+           ),
+           cost_fn=lambda r: r.usage.input_tokens  * 0.000003
+                           + r.usage.output_tokens * 0.000015)
+
+# Now every LLM call goes through Shape:
+with agent.explore() as ctx:
+    response = ctx.call("call_llm", prompt="analyze this customer")  # $0.02
+    plan = ctx.call("call_llm", prompt="what should we do?")         # $0.03
+    ctx.call("call_llm", prompt="...")  # budget gate → BLOCKED. No tokens burned.
 ```
 
-The budget gate now tracks everything — inference + tool costs — as a single control signal.
+`cost_fn` takes the tool's return value and returns a dollar amount. The cost is recorded *after* execution and affects the *next* call's budget gate — same as a credit card: the purchase that maxes you out goes through, the next one declines.
 
 ## How Shape Compares
 

@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 site/node_modules/
 site/dist/
+docs/

@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shape — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f4f1ea;
+    --paper-2:#ece8df;
+    --paper-3:#e3dece;
+    --rule:#d4cdbc;
+    --ink:#1c1b18;
+    --ink-2:#46443d;
+    --ink-3:#7a766c;
+    --ink-4:#a8a294;
+    --ok: oklch(0.58 0.10 135);
+    --ok-soft: oklch(0.93 0.05 135);
+    --warn: oklch(0.66 0.16 60);
+    --warn-soft: oklch(0.94 0.06 60);
+    --bad: oklch(0.54 0.18 28);
+    --bad-soft: oklch(0.94 0.07 28);
+    --info: oklch(0.52 0.10 250);
+    --info-soft: oklch(0.94 0.04 250);
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --sans:"Inter",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  body{font-size:14px;line-height:1.5;min-height:100vh}
+
+  .shell{max-width:1180px;margin:0 auto;padding:32px 28px 80px}
+
+  /* layout: left dashboard, right narrative */
+  .layout{display:grid;grid-template-columns: 280px 1fr;gap:24px;align-items:start}
+  .dash{position:sticky;top:18px;display:flex;flex-direction:column;gap:14px}
+  .narrative{min-width:0}
+
+  /* ---- header ---- */
+  .top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:28px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:600}
+  .brand .glyph{width:18px;height:18px;border:1.5px solid var(--ink);border-radius:3px;position:relative}
+  .brand .glyph::before{content:"";position:absolute;inset:3px;border:1.5px solid var(--ink);border-radius:1px;transform:rotate(15deg)}
+  .brand .name{font-size:14px}
+  .brand .tag{color:var(--ink-3);font-weight:400;margin-left:6px;font-size:13px}
+  .top .scenarios{display:flex;gap:6px;font-family:var(--mono);font-size:11px}
+  .scn-pill{
+    border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+    padding:6px 11px;border-radius:99px;cursor:pointer;letter-spacing:.02em;
+  }
+  .scn-pill:hover{background:var(--paper-2)}
+  .scn-pill.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* ---- task card ---- */
+  .task{
+    border:1px solid var(--rule);border-radius:8px;background:#fbf9f3;
+    padding:18px 20px;margin-bottom:18px;
+  }
+  .task-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .task-h .agent{color:var(--ink-2)}
+  .task-q{font-size:18px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-0.01em}
+  .task-meta{margin-top:12px;display:flex;gap:18px;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);flex-wrap:wrap}
+  .task-meta b{color:var(--ink-2);font-weight:500}
+
+  /* ---- runner controls (compact, top of narrative) ---- */
+  .runbar{
+    position:sticky;top:8px;z-index:10;
+    display:flex;align-items:center;justify-content:flex-end;gap:10px;
+    background:var(--paper);
+    border:1px solid var(--rule);border-radius:8px;
+    padding:10px 14px;margin-bottom:18px;
+    box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .runbar .hint{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-right:auto}
+
+  /* ---- dashboard cards ---- */
+  .card{
+    border:1px solid var(--rule);border-radius:8px;background:#fbf9f3;
+    padding:14px 14px 12px;
+  }
+  .card .h{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+  /* phase rail */
+  .phase-rail{display:flex;flex-direction:column;gap:0;position:relative}
+  .phase-row{
+    display:grid;grid-template-columns: 22px 1fr;gap:10px;align-items:flex-start;
+    padding:8px 0;position:relative;
+  }
+  .phase-row + .phase-row::before{
+    content:"";position:absolute;left:10px;top:-8px;width:2px;height:16px;background:var(--rule);
+  }
+  .phase-row .pdot{
+    width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);background:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--ink-3);
+    transition:.2s;
+  }
+  .phase-row.is-active .pdot{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .phase-row.is-done .pdot{background:var(--ok);border-color:var(--ok);color:var(--paper)}
+  .phase-row.is-done .pdot::after{content:"✓";font-size:11px}
+  .phase-row.is-done .pdot span{display:none}
+  .phase-row .ptxt .pname{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+  .phase-row.is-active .ptxt .pname{color:var(--ink)}
+  .phase-row .ptxt .pdesc{font-size:11.5px;color:var(--ink-3);line-height:1.4;margin-top:2px}
+  .phase-row.is-active .ptxt .pdesc{color:var(--ink-2)}
+
+  /* budget */
+  .b-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
+  .b-meta .v{color:var(--ink);font-weight:600}
+  .b-bar{height:8px;border-radius:99px;background:var(--paper-2);position:relative;overflow:hidden;border:1px solid var(--rule)}
+  .b-bar .fill{display:block;height:100%;background:var(--ok);width:0%;transition:width .4s, background .3s}
+  .b-bar .tk{position:absolute;top:-3px;width:1px;height:14px;background:var(--ink-3);opacity:.35}
+  .b-bar .t50{left:50%}.b-bar .t75{left:75%}.b-bar .t90{left:90%}
+  .b-marks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);margin-top:5px;letter-spacing:.04em}
+  .b-state-row{margin-top:10px;padding:6px 9px;border-radius:4px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;background:var(--ok-soft);color:var(--ok);display:flex;justify-content:space-between}
+  .b-state-row.degrade{background:var(--warn-soft);color:var(--warn)}
+  .b-state-row.force{background:var(--warn-soft);color:#9c5a0d}
+  .b-state-row.stop{background:var(--bad-soft);color:var(--bad)}
+
+  .runbtn{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+    padding:9px 18px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-weight:600;
+  }
+  .runbtn:hover{background:#000}
+  .runbtn[disabled]{opacity:.4;cursor:not-allowed}
+  .runbtn .play{width:0;height:0;border-left:7px solid var(--paper);border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .autobtn{
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    background:transparent;color:var(--ink-2);border:1px solid var(--rule);
+    padding:8px 14px;border-radius:5px;cursor:pointer;font-weight:500;
+  }
+  .autobtn:hover{background:var(--paper-2);color:var(--ink)}
+  .autobtn[disabled]{opacity:.4;cursor:not-allowed}
+  .autobtn.running{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* ---- rules card (in dashboard) ---- */
+  .info-card .info-body{font-size:13px;color:var(--ink-2);line-height:1.5}
+  .info-card .info-body em{font-style:normal;color:var(--ink);background:var(--paper-2);padding:0 5px;border-radius:3px;font-family:var(--mono);font-size:11.5px}
+  .info-card .info-body strong{color:var(--ink);font-weight:600}
+  .info-card{transition:border-color .25s, box-shadow .25s}
+  .info-card.flash{border-color:var(--ink);box-shadow:0 0 0 3px rgba(28,27,24,.05)}
+  .rule-line{
+    font-family:var(--mono);font-size:11px;color:var(--ink-2);
+    padding:5px 0;display:flex;align-items:flex-start;gap:6px;
+    transition:.2s;border-radius:3px;padding-left:6px;margin-left:-6px;
+    line-height:1.4;
+  }
+  .rule-line .rl-num{color:var(--ink-3);font-size:10px;width:14px}
+  .rule-line .kw{font-weight:600;color:var(--bad)}
+  .rule-line .kw.req{color:var(--info)}
+  .rule-line .kw.flag{color:var(--warn)}
+  .rule-line.fired{background:var(--bad-soft);color:var(--ink)}
+  .rule-line.fired .kw{color:var(--bad)}
+  .rule-line.fired-req{background:var(--info-soft)}
+  .rule-line.fired-req .kw{color:var(--info)}
+
+  /* ---- timeline ---- */
+  .timeline{position:relative;padding-left:0}
+  .step{
+    position:relative;
+    border:1px solid var(--rule);background:#fbf9f3;
+    border-radius:8px;padding:14px 16px 14px;margin-bottom:10px;
+    animation:slide .35s ease-out;
+  }
+  @keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+  .step.active{border-color:var(--ink);box-shadow:0 0 0 3px rgba(28,27,24,.05)}
+  .step.blocked{border-color:color-mix(in oklch, var(--bad) 40%, var(--rule))}
+  .step.compensated{opacity:.6}
+
+  .step-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .step-h .num{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);min-width:22px}
+  .step-h .phase-tag{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 7px;border-radius:3px;background:var(--paper-3);color:var(--ink-2);font-weight:600;
+  }
+  .step-h .phase-tag.explore{background:var(--info-soft);color:var(--info)}
+  .step-h .phase-tag.decide{background:var(--paper-2);color:var(--ink-2)}
+  .step-h .phase-tag.commit{background:var(--ok-soft);color:var(--ok)}
+  .step-h .verdict{
+    margin-left:auto;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;
+    padding:3px 9px;border-radius:3px;
+  }
+  .verdict.allow{background:var(--ok-soft);color:var(--ok)}
+  .verdict.block{background:var(--bad-soft);color:var(--bad)}
+  .verdict.approve{background:var(--warn-soft);color:var(--warn)}
+  .verdict.compensated{background:var(--paper-2);color:var(--ink-3)}
+  .verdict.pending{background:var(--paper-2);color:var(--ink-3)}
+  .verdict.pending::after{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-left:6px;animation:pulse 1s infinite;vertical-align:middle}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+  /* the agent's narrative line — what is it trying to do */
+  .step .intent{
+    margin-top:10px;font-size:14.5px;color:var(--ink);line-height:1.4;
+  }
+  .step .intent .who{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-right:6px}
+
+  /* the call line */
+  .step .call{
+    margin-top:8px;
+    font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:var(--paper-2);
+    padding:7px 10px;border-radius:4px;
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  }
+  .step .call .tname{font-weight:600}
+  .step .call .targs{color:var(--ink-3)}
+  .step .call .effect{
+    margin-left:auto;
+    font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+    padding:2px 6px;border-radius:99px;border:1px solid var(--rule);background:var(--paper);
+  }
+  .step .call .effect.read{color:var(--info);border-color:color-mix(in oklch,var(--info) 35%,var(--rule))}
+  .step .call .effect.rev{color:var(--warn);border-color:color-mix(in oklch,var(--warn) 35%,var(--rule))}
+  .step .call .effect.irr{color:var(--bad);border-color:color-mix(in oklch,var(--bad) 35%,var(--rule))}
+
+  /* the gate — explanation of WHY it was allowed/blocked */
+  .step .gate{
+    margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);
+    line-height:1.55;
+    border-top:1px dashed var(--rule);padding-top:9px;
+  }
+  .step .gate .glabel{color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-size:9.5px;margin-right:6px}
+  .step .gate .ref{color:var(--bad);font-weight:600}
+  .step .gate .ref.ok{color:var(--ok)}
+  .step .gate .ref.req{color:var(--info)}
+  .step .gate .cost{display:inline-block;margin-left:8px;color:var(--ink-3)}
+
+  /* approval inline */
+  .approval{
+    margin-top:10px;border:1.5px solid var(--warn);background:var(--warn-soft);
+    border-radius:6px;padding:11px 13px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    animation:slide .25s ease-out;
+  }
+  .approval .ap-t{flex:1;font-family:var(--mono);font-size:12px;color:#5a3d10;min-width:200px}
+  .approval .ap-t b{color:#3d2807}
+  .approval button{
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    border:1px solid #8a5e1d;background:transparent;color:#5a3d10;
+    padding:6px 13px;border-radius:3px;cursor:pointer;font-weight:600;
+  }
+  .approval button.yes{background:#5a3d10;color:var(--paper);border-color:#5a3d10}
+  .approval button:hover{filter:brightness(.92)}
+
+  /* outcome banner */
+  .outcome{
+    margin-top:18px;border-radius:8px;padding:14px 16px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.55;
+    animation:slide .3s ease-out;
+  }
+  .outcome.success{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in oklch,var(--ok) 30%,var(--rule))}
+  .outcome.blocked{background:var(--bad-soft);color:var(--bad);border:1px solid color-mix(in oklch,var(--bad) 30%,var(--rule))}
+  .outcome b{font-weight:600}
+  .outcome .sub{display:block;margin-top:4px;color:var(--ink-2);font-weight:400}
+
+  /* ---- footer ---- */
+  .ftr{margin-top:30px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding-top:14px;border-top:1px solid var(--rule);flex-wrap:wrap;gap:8px}
+  .ftr a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule)}
+
+  /* ---- explanation bubbles ---- */
+  .bubble-host{position:relative}
+  .bubble{
+    position:absolute;z-index:50;
+    background:var(--ink);color:var(--paper);
+    border-radius:8px;padding:10px 12px;
+    max-width:240px;font-size:12px;line-height:1.45;
+    box-shadow:0 8px 24px rgba(0,0,0,.18), 0 2px 4px rgba(0,0,0,.08);
+    animation:bubbleIn .3s cubic-bezier(.2,.8,.3,1.2);
+    cursor:pointer;
+  }
+  @keyframes bubbleIn{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:none}}
+  .bubble .b-num{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:#cfcabb;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .bubble .b-x{color:#cfcabb;opacity:.6;font-size:14px;line-height:1;border:none;background:none;cursor:pointer;padding:0;margin-left:8px}
+  .bubble .b-x:hover{opacity:1;color:var(--paper)}
+  .bubble .b-body{font-weight:500}
+  .bubble .b-body em{font-style:normal;color:oklch(0.85 0.10 60);font-family:var(--mono);font-size:11.5px}
+  .bubble::before{
+    content:"";position:absolute;width:10px;height:10px;background:var(--ink);
+    transform:rotate(45deg);
+  }
+  .bubble.point-up::before{top:-4px;left:24px}
+  .bubble.point-up-right::before{top:-4px;right:24px}
+  .bubble.point-down::before{bottom:-4px;left:24px}
+  .bubble.point-left::before{left:-4px;top:18px}
+  .bubble.point-right::before{right:-4px;top:18px}
+
+  .help-toggle{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+    background:transparent;border:1px solid var(--rule);color:var(--ink-3);
+    padding:5px 10px;border-radius:99px;cursor:pointer;margin-left:8px;
+  }
+  .help-toggle:hover{background:var(--paper-2);color:var(--ink-2)}
+  .help-toggle.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr}
+    .dash{position:static}
+  }
+  @media (max-width:600px){
+    .top{flex-direction:column;align-items:flex-start;gap:10px}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="top">
+    <div class="brand">
+      <div class="glyph"></div>
+      <span class="name">shape</span>
+      <span class="tag">// guardrails for AI agents</span>
+    </div>
+    <div class="scenarios" id="scn-bar"></div>
+    <button class="help-toggle on" id="help-toggle" title="Toggle explanation bubbles">? hints on</button>
+  </div>
+
+  <div class="layout">
+
+    <!-- LEFT DASHBOARD -->
+    <aside class="dash">
+      <div class="card">
+        <div class="h"><span>Phase</span><span id="phase-stage" style="color:var(--ink-2);font-weight:500">idle</span></div>
+        <div class="phase-rail" id="phase-rail">
+          <div class="phase-row" data-phase="explore"><span class="pdot"><span>1</span></span><div class="ptxt"><div class="pname">Explore</div><div class="pdesc">Read-only. Gather context.</div></div></div>
+          <div class="phase-row" data-phase="decide"><span class="pdot"><span>2</span></span><div class="ptxt"><div class="pname">Decide</div><div class="pdesc">Propose actions. No side effects.</div></div></div>
+          <div class="phase-row" data-phase="commit"><span class="pdot"><span>3</span></span><div class="ptxt"><div class="pname">Commit</div><div class="pdesc">Transactional. All-or-nothing.</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="h"><span>Budget</span><span style="font-family:var(--mono);color:var(--ink-3);font-weight:500">$<span id="b-spent">0.00</span> / $5.00</span></div>
+        <div class="b-bar" id="b-bar"><span class="fill" id="b-fill"></span><span class="tk t50"></span><span class="tk t75"></span><span class="tk t90"></span></div>
+        <div class="b-marks"><span>0%</span><span>50</span><span>75</span><span>90</span></div>
+        <div class="b-state-row" id="b-state"><span>state</span><span id="b-state-name">NORMAL</span></div>
+      </div>
+
+      <div class="card">
+        <div class="h"><span>Active rules</span><span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">DSL</span></div>
+        <div id="rules"></div>
+      </div>
+
+      <div class="card info-card" id="info-card">
+        <div class="h"><span>What's happening</span><span style="color:var(--ink-4);font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px" id="info-tag">intro</span></div>
+        <div class="info-body" id="info-body">
+          Click <em>start task</em> on the right. Each click reveals one step. The dashboard above updates as the agent moves through phases, spends budget, and triggers rules — and this card tells you what just happened.
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT NARRATIVE -->
+    <div class="narrative">
+
+      <!-- TASK -->
+      <div class="task">
+        <div class="task-h">
+          <span>Task</span>
+          <span class="agent">agent: <b id="m-agent">customer-service</b> · budget $5.00</span>
+        </div>
+        <div class="task-q" id="task-q">—</div>
+        <div class="task-meta" id="task-meta"></div>
+      </div>
+
+      <div class="runbar">
+        <span class="hint" id="run-hint">click to begin — or auto-play to watch</span>
+        <button class="autobtn" id="auto-btn">▶ auto-play</button>
+        <button class="runbtn" id="run-btn"><span class="play"></span> start task</button>
+      </div>
+
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <div class="ftr">
+    <span><a href="./">← shape</a> · <a href="./article.html">article</a></span>
+    <span>shape.py · phases → transactions → budget → traces</span>
+    <span><a href="https://github.com/vidanov/shape" target="_blank">github.com/vidanov/shape</a></span>
+  </div>
+</div>
+
+<script>
+/* ---------- rules ---------- */
+const RULES = [
+  { kw:'BLOCK',                tail:'send_email WHEN phase IS NOT commit',          cls:'kw' },
+  { kw:'BLOCK',                tail:'* WHEN budget ABOVE 90%',                       cls:'kw' },
+  { kw:'REQUIRE APPROVAL FOR', tail:'* WHEN tool IS irreversible',                   cls:'kw req' },
+  { kw:'FLAG',                 tail:'* WHEN time OUTSIDE 09:00-17:00',               cls:'kw flag' },
+];
+
+/* ---------- scenarios ---------- */
+/* Each step now reads as a NARRATIVE: what the agent is trying to do, what
+   the call is, and which rule + reason was used to allow / gate / block it.
+   The user reads top-to-bottom and doesn't need to look anywhere else. */
+
+const SCEN = {
+  s1: {
+    label: '01 happy path',
+    task: 'Send a welcome email to customer A. Smith (C-1284) after confirming she is gold-tier.',
+    meta: ['tools: 4','rules: 4','starting budget: $0.00'],
+    starting_budget: 0,
+    steps:[
+      {phase:'explore', intent:'Pull the customer record so we know who we are dealing with.',
+        tool:'lookup_customer', args:'id="C-1284"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ tools.'},
+      {phase:'decide', intent:'Check whether A. Smith qualifies for the welcome flow.',
+        tool:'evaluate_eligibility', args:'tier="gold"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'DECIDE permits READ. No side effects yet.'},
+      {phase:'decide', intent:'Propose the action so a human (or rule) can review before COMMIT.',
+        tool:'propose', args:'action="welcome_email"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'Proposal recorded — nothing happens to the world.'},
+      {phase:'commit', intent:'Mark A. Smith as welcomed in the CRM (reversible — has compensation).',
+        tool:'update_record', args:'id="C-1284" status="welcomed"', effect:'rev', cost:0.01,
+        verdict:'allow', ruleIdx:null, reason:'COMMIT permits writes. Reversible — refund/undo registered.'},
+      {phase:'commit', intent:'Send the actual email — irreversible, must be approved first.',
+        tool:'send_email', args:'to="a.smith@…" template="welcome"', effect:'irr', cost:0.10,
+        verdict:'approve', ruleIdx:2, reason:'Rule 03 — irreversible tools require human approval.'},
+    ],
+    outcome:{kind:'success', head:'Task completed under guardrails.',
+      sub:'Phases respected. Approval logged. Transaction committed. $0.11 spent of $5.00.'}
+  },
+  s2: {
+    label: '02 phase violation',
+    task: 'A buggy agent tries to email customer A. Smith before reading her record.',
+    meta: ['demonstrates: BLOCK rule','phase: EXPLORE → tries IRREVERSIBLE'],
+    starting_budget: 0,
+    steps:[
+      {phase:'explore', intent:'Look up the customer first.',
+        tool:'lookup_customer', args:'id="C-9120"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ tools.'},
+      {phase:'explore', intent:'Skip ahead and email her right now.',
+        tool:'send_email', args:'to="a.smith@…" template="promo"', effect:'irr', cost:0,
+        verdict:'block', ruleIdx:0, reason:'Rule 01 fires — send_email is forbidden outside COMMIT.', halt:true},
+    ],
+    outcome:{kind:'blocked', head:'Agent halted before any side effect.',
+      sub:'Without Shape, the email goes out. With Shape, the phase rule throws — full proof in the trace.'}
+  },
+  s3: {
+    label: '03 transaction rollback',
+    task: 'Charge A. Smith $99 for an order, create the order, send a receipt — atomic.',
+    meta: ['demonstrates: COMPENSATION','3 commits, 1 fails'],
+    starting_budget: 0,
+    steps:[
+      {phase:'explore', intent:'Read her cart and payment method.',
+        tool:'lookup_customer', args:'id="C-7711"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ.'},
+      {phase:'decide', intent:'Propose the 3-step transaction.',
+        tool:'propose', args:'action="charge+order+receipt"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'Proposal stored.'},
+      {phase:'commit', intent:'Step 1 — charge the card. Reversible (refund registered).',
+        tool:'charge_card', args:'amount=$99.00', effect:'rev', cost:0.50,
+        verdict:'allow', ruleIdx:null, reason:'Reversible — compensation = refund(). OK to proceed.'},
+      {phase:'commit', intent:'Step 2 — create the order in inventory.',
+        tool:'create_order', args:'items=cart_482', effect:'rev', cost:0.01,
+        verdict:'block', ruleIdx:null, reason:'Tool failed — inventory mismatch. Transaction T1 aborts.', fail:true},
+      {phase:'commit', intent:'Step 1 must be undone — refund the card automatically.',
+        tool:'charge_card', args:'COMPENSATE: refund()', effect:'rev', cost:0,
+        verdict:'compensated', ruleIdx:null, reason:'Compensation invoked in reverse order. World restored.', compensate:true},
+    ],
+    outcome:{kind:'success', head:'Transaction safely rolled back.',
+      sub:'Step 1 committed, step 2 failed, step 3 never ran. Refund executed. No partial state left behind.'}
+  },
+  s4: {
+    label: '04 budget gate',
+    task: 'Send promotional emails — but $4.20 is already spent of the $5.00 budget.',
+    meta: ['demonstrates: budget thresholds','starts at 84% spent'],
+    starting_budget: 4.20,
+    steps:[
+      {phase:'explore', intent:'Read the campaign list.',
+        tool:'lookup_customer', args:'id="C-2298"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'EXPLORE permits READ. Budget at 84% — DEGRADE active.'},
+      {phase:'decide', intent:'Propose a bulk email blast.',
+        tool:'propose', args:'action="bulk_email"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'Proposal stored. FORCE_DECIDE pressure rising.'},
+      {phase:'commit', intent:'Send the first email.',
+        tool:'send_email', args:'to="a.smith@…"', effect:'irr', cost:0.10,
+        verdict:'approve', ruleIdx:2, reason:'Rule 03 — irreversible + near budget cap. Human must approve.'},
+      {phase:'commit', intent:'Send a second email.',
+        tool:'send_email', args:'to="ben@…"', effect:'irr', cost:0.10,
+        verdict:'block', ruleIdx:1, reason:'Rule 02 fires — budget ABOVE 90%. All tools blocked.', halt:true},
+    ],
+    outcome:{kind:'blocked', head:'Budget gate stopped the agent.',
+      sub:'Cost is a control signal, not just a log. At 90% spent, every tool is blocked until you intervene.'}
+  },
+};
+
+/* ---------- state ---------- */
+let active = 's1';
+let spent = 0;
+let stepIdx = 0;       // next step to reveal
+let started = false;
+let finished = false;
+let awaitingApproval = false;
+let autoPlaying = false;
+let lastPhase = null;
+let prevNode = null;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+/* ---------- render ---------- */
+function renderScenarios(){
+  const bar = $('#scn-bar'); bar.innerHTML='';
+  Object.entries(SCEN).forEach(([id,s])=>{
+    const b=document.createElement('button');
+    b.className='scn-pill'+(id===active?' active':'');
+    b.textContent=s.label;
+    b.onclick=()=>{ if(awaitingApproval) return; active=id; loadScenario(); };
+    bar.appendChild(b);
+  });
+}
+function renderRules(){
+  const r = $('#rules'); r.innerHTML='';
+  RULES.forEach((rule,i)=>{
+    const div=document.createElement('div');
+    div.className='rule-line';
+    div.dataset.idx=i;
+    div.innerHTML = `<span class="rl-num">${String(i+1).padStart(2,'0')}</span><span class="${rule.cls}">${rule.kw}</span> <span>${rule.tail}</span>`;
+    r.appendChild(div);
+  });
+}
+function setPhase(p){
+  const stage = $('#phase-stage');
+  const rows = document.querySelectorAll('.phase-row');
+  if(!p){
+    stage.textContent = 'idle';
+    rows.forEach(r=>r.classList.remove('is-active','is-done'));
+    return;
+  }
+  stage.textContent = p;
+  let hit = false;
+  rows.forEach(r=>{
+    r.classList.remove('is-active','is-done');
+    if (r.dataset.phase === p){ r.classList.add('is-active'); hit = true; }
+    else if (!hit) r.classList.add('is-done');
+  });
+}
+function setBudget(v){
+  spent=Math.max(0,Math.min(5,v));
+  const pct=(spent/5)*100;
+  $('#b-spent').textContent=spent.toFixed(2);
+  const fill=$('#b-fill'); fill.style.width=pct+'%';
+  let label='normal',cls='',color='var(--ok)';
+  if(pct>=90){label='stop';cls='stop';color='var(--bad)'}
+  else if(pct>=75){label='force-decide';cls='force';color='oklch(0.66 0.16 55)'}
+  else if(pct>=50){label='degrade';cls='degrade';color='var(--warn)'}
+  fill.style.background=color;
+  const s=$('#b-state'); s.className='b-state-row '+cls; $('#b-state-name').textContent = label.toUpperCase();
+}
+function fireRule(idx,kind){
+  const el=document.querySelector(`#rules .rule-line[data-idx="${idx}"]`);
+  if(!el) return;
+  el.classList.add(kind==='req'?'fired-req':'fired');
+  setTimeout(()=>el.classList.remove('fired','fired-req'),1600);
+}
+
+function loadScenario(){
+  const sc=SCEN[active];
+  $('#task-q').textContent = sc.task;
+  $('#task-meta').innerHTML = sc.meta.map(m=>`<span>${m}</span>`).join('');
+  $('#timeline').innerHTML = '';
+  setPhase(null);
+  setBudget(0);
+  stepIdx = 0;
+  started = false;
+  finished = false;
+  awaitingApproval = false;
+  lastPhase = null;
+  prevNode = null;
+  // also reset bubbles when scenario reloads
+  dismissStartBubble();
+  if (!localStorage.getItem(START_BUBBLE_KEY)) setTimeout(showStartBubble, 300);
+  renderScenarios();
+  updateRunBtn();
+}
+
+function updateRunBtn(){
+  const btn = $('#run-btn');
+  const abtn = $('#auto-btn');
+  btn.disabled = awaitingApproval;
+  abtn.disabled = awaitingApproval || finished;
+  const sc = SCEN[active];
+  if (finished) {
+    btn.innerHTML = '\u21bb replay';
+    abtn.style.display = 'none';
+  } else if (!started) {
+    btn.innerHTML = '<span class="play"></span> start task';
+    abtn.style.display = '';
+  } else if (awaitingApproval) {
+    btn.innerHTML = 'awaiting approval \u2192';
+    abtn.style.display = 'none';
+  } else {
+    btn.innerHTML = `next step \u2192 <span style="opacity:.55;margin-left:6px;font-weight:400">${stepIdx+1}/${sc.steps.length}</span>`;
+    abtn.style.display = autoPlaying ? '' : '';
+  }
+}
+
+/* ---------- step rendering ---------- */
+function effectName(e){return e==='read'?'read':e==='rev'?'reversible':'irreversible'}
+function makeStep(step,i){
+  const el=document.createElement('div');
+  el.className='step active';
+  el.innerHTML = `
+    <div class="step-h">
+      <span class="num">${String(i+1).padStart(2,'0')}</span>
+      <span class="phase-tag ${step.phase}">${step.phase}</span>
+      <span class="verdict pending">checking</span>
+    </div>
+    <div class="intent"><span class="who">agent →</span>${step.intent}</div>
+    <div class="call">
+      <span class="tname">${step.tool}</span><span class="targs">(${step.args})</span>
+      <span class="effect ${step.effect}">${effectName(step.effect)}</span>
+    </div>`;
+  return el;
+}
+
+function settleStep(node,step){
+  // strip "active" from previous-finished
+  const v=node.querySelector('.verdict');
+  v.className='verdict '+step.verdict;
+  v.textContent = step.verdict==='block'?(step.fail?'failed':'blocked')
+                : step.verdict==='approve'?'approved'
+                : step.verdict==='compensated'?'compensated'
+                : 'allowed';
+
+  if(step.verdict==='block') node.classList.add('blocked');
+  if(step.verdict==='compensated') node.classList.add('compensated');
+
+  const refClass = step.verdict==='block'?'':step.verdict==='approve'?'req':'ok';
+  const ref = step.ruleIdx!=null ? `<span class="ref ${refClass}">rule ${String(step.ruleIdx+1).padStart(2,'0')}</span> · ` : '';
+  const cost = step.cost ? `<span class="cost">cost $${step.cost.toFixed(2)}</span>` : '';
+  const gate=document.createElement('div');
+  gate.className='gate';
+  gate.innerHTML = `<span class="glabel">why</span>${ref}${step.reason}${cost}`;
+  node.appendChild(gate);
+}
+
+function approvalGate(node,step){
+  awaitingApproval = true;
+  updateRunBtn();
+  if (autoPlaying) {
+    return sleep(800).then(()=>{ awaitingApproval=false; updateRunBtn(); return true; });
+  }
+  return new Promise(res=>{
+    const ap=document.createElement('div');
+    ap.className='approval';
+    ap.innerHTML = `
+      <div class="ap-t"><b>approval required</b> — ${step.tool}(${step.args}) · effect=irreversible</div>
+      <button class="no">deny</button>
+      <button class="yes">approve</button>`;
+    node.appendChild(ap);
+    ap.querySelector('.yes').onclick=()=>{ap.remove();awaitingApproval=false;updateRunBtn();res(true)};
+    ap.querySelector('.no').onclick =()=>{ap.remove();awaitingApproval=false;updateRunBtn();res(false)};
+  });
+}
+
+/* ---------- run (one step at a time, user-driven) ---------- */
+function finishOutcome(){
+  const sc=SCEN[active];
+  const out = document.createElement('div');
+  out.className = 'outcome '+sc.outcome.kind;
+  out.innerHTML = `<b>${sc.outcome.head}</b><span class="sub">${sc.outcome.sub}</span>`;
+  $('#timeline').appendChild(out);
+  setPhase(null);
+  finished = true;
+  setInfo('done');
+  updateRunBtn();
+}
+
+/* ---------- contextual info card ---------- */
+const INFO = {
+  intro: {
+    tag:'intro',
+    body:'Click <em>start task</em> on the right. Each click reveals one step. The dashboard above updates as the agent moves through phases, spends budget, and triggers rules — and this card tells you what just happened.'
+  },
+  started: {
+    tag:'phase',
+    body:'<strong>Phase started.</strong> Agents move through <em>EXPLORE → DECIDE → COMMIT</em>. Write tools cannot fire outside COMMIT — Shape throws, not warns.'
+  },
+  phase_explore: { tag:'phase', body:'<strong>EXPLORE.</strong> Read-only context gathering. Any side-effecting tool here would be rejected before it ran.' },
+  phase_decide:  { tag:'phase', body:'<strong>DECIDE.</strong> Plans and proposals only — still no side effects allowed. Setting up the transaction.' },
+  phase_commit:  { tag:'phase', body:'<strong>COMMIT.</strong> Transactional. All steps succeed together or compensate together — no half-done work.' },
+  rule_fired:    { tag:'rule',  body:'<strong>A rule matched.</strong> The highlighted line in <em>Active rules</em> is the one Shape just evaluated against this call.' },
+  approval_req:  { tag:'rule',  body:'<strong>Approval required.</strong> Irreversible effects pause for an operator. Until you click approve, nothing runs.' },
+  blocked:       { tag:'verdict', body:'<strong>Blocked.</strong> A rule rejected the call before any side effect. The agent gets the reason and can re-plan.' },
+  allowed:       { tag:'verdict', body:'<strong>Allowed.</strong> Every call records phase, matching rule, and cost — so you always know <em>why</em> it ran.' },
+  compensated:   { tag:'verdict', body:'<strong>Compensated.</strong> A later step failed, so Shape rolled back the earlier effect. Transactional, not best-effort.' },
+  budget_warn:   { tag:'budget', body:'<strong>Budget threshold crossed.</strong> Above 50% Shape <em>degrades</em>; 75% forces a decision; 90% is a hard stop. Behavior changes — not just a warning banner.' },
+  done:          { tag:'done',   body:'<strong>Task finished.</strong> Pick another scenario above to see a different rule fire — or replay this one.' },
+};
+
+let infoTimer = null;
+function setInfo(key){
+  const cfg = INFO[key];
+  if (!cfg) return;
+  const card = $('#info-card');
+  $('#info-tag').textContent = cfg.tag;
+  $('#info-body').innerHTML = cfg.body;
+  card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+  clearTimeout(infoTimer);
+  infoTimer = setTimeout(()=>card.classList.remove('flash'), 900);
+}
+
+/* ---------- first-run start bubble ---------- */
+const START_BUBBLE_KEY = 'shape_demo_seen_start';
+let startBubbleEl = null;
+
+function showStartBubble(){
+  if (localStorage.getItem(START_BUBBLE_KEY)) return;
+  if (startBubbleEl) return;
+  const anchor = $('#run-btn');
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
+  const b = document.createElement('div');
+  b.className = 'bubble point-up-right';
+  b.style.top = (rect.top + window.scrollY + rect.height + 14) + 'px';
+  b.style.left = (rect.left + window.scrollX - 220) + 'px';
+  b.innerHTML = `<div class="b-num"><span>start here</span><button class="b-x" aria-label="dismiss">\u00d7</button></div><div class="b-body">Click <em>start task</em> to begin. Each click advances one step. Watch the <em>What's happening</em> card on the left for context.</div><div style="margin-top:6px;font-family:var(--mono);font-size:9.5px;color:#cfcabb;letter-spacing:.06em">click to dismiss</div>`;
+  document.body.appendChild(b);
+  startBubbleEl = b;
+  const dismiss = ()=>{
+    if (!b.parentNode) return;
+    b.remove();
+    startBubbleEl = null;
+    localStorage.setItem(START_BUBBLE_KEY, '1');
+  };
+  b.onclick = dismiss;
+  b.querySelector('.b-x').onclick = (e)=>{ e.stopPropagation(); dismiss(); };
+}
+function dismissStartBubble(){
+  if (startBubbleEl){
+    startBubbleEl.remove();
+    startBubbleEl = null;
+    localStorage.setItem(START_BUBBLE_KEY, '1');
+  }
+}
+function resetStartBubbleForReload(){ /* no-op: localStorage persists */ }
+function clearBubbles(){ dismissStartBubble(); }
+function resetBubbles(){ /* legacy hook */ }
+
+function toggleHints(){
+  // Hints toggle now controls the start bubble + info card visibility.
+  const t = $('#help-toggle');
+  const on = !t.classList.contains('on');
+  t.classList.toggle('on', on);
+  t.textContent = on ? '? hints on' : '? hints off';
+  $('#info-card').style.display = on ? '' : 'none';
+  if (!on) dismissStartBubble();
+  else if (!started) {
+    localStorage.removeItem(START_BUBBLE_KEY);
+    showStartBubble();
+  }
+}
+
+async function advance(){
+  if (awaitingApproval) return;
+  if (finished) { loadScenario(); return; }
+  const sc = SCEN[active];
+
+  if (!started){
+    started = true;
+    setBudget(sc.starting_budget||0);
+    updateRunBtn();
+    dismissStartBubble();
+    setInfo('started');
+  }
+
+  if (stepIdx >= sc.steps.length){ finishOutcome(); return; }
+
+  const step = sc.steps[stepIdx];
+  if (prevNode) prevNode.classList.remove('active');
+
+  if (step.phase !== lastPhase){
+    lastPhase = step.phase;
+    setPhase(step.phase);
+    setInfo('phase_'+step.phase);
+  }
+
+  const node = makeStep(step, stepIdx);
+  $('#timeline').appendChild(node);
+  window.scrollTo({top:node.getBoundingClientRect().top+window.scrollY-100,behavior:'smooth'});
+
+  // brief moment to read the intent before the verdict lands
+  await sleep(450);
+
+  if (step.ruleIdx != null){
+    fireRule(step.ruleIdx, step.verdict==='approve'?'req':'fire');
+    await sleep(280);
+  }
+
+  if (step.verdict === 'approve'){
+    const ok = await approvalGate(node, step);
+    if (!ok){ step.verdict='block'; step.reason='Operator denied approval. No call executed.'; step.ruleIdx=null; }
+  }
+
+  settleStep(node, step);
+
+  if (step.cost && (step.verdict==='allow' || step.verdict==='approve')){
+    const before = spent;
+    setBudget(spent + step.cost);
+    const beforePct = (before/5)*100, nowPct = (spent/5)*100;
+    if (nowPct >= 50 && beforePct < 50) setInfo('budget_warn');
+  }
+
+  // contextual info on verdict / rule
+  if (step.verdict === 'approve') setInfo('approval_req');
+  else if (step.verdict === 'block') setInfo('blocked');
+  else if (step.verdict === 'compensated') setInfo('compensated');
+  else if (step.ruleIdx != null) setInfo('rule_fired');
+  else setInfo('allowed');
+
+  prevNode = node;
+  stepIdx++;
+
+  if (step.halt || stepIdx >= sc.steps.length){ finishOutcome(); return; }
+  updateRunBtn();
+}
+
+/* ---------- auto-play ---------- */
+async function autoPlay(){
+  if (autoPlaying || finished) return;
+  autoPlaying = true;
+  const abtn = $('#auto-btn');
+  abtn.classList.add('running');
+  abtn.textContent = '■ playing…';
+  abtn.disabled = true;
+
+  while (!finished && autoPlaying) {
+    await advance();
+    if (!finished) await sleep(1200);
+  }
+  autoPlaying = false;
+  abtn.classList.remove('running');
+  abtn.textContent = '▶ auto-play';
+  updateRunBtn();
+}
+
+/* ---------- boot ---------- */
+renderRules();
+loadScenario();
+$('#run-btn').onclick = advance;
+$('#auto-btn').onclick = autoPlay;
+$('#help-toggle').onclick = toggleHints;
+</script>
+</body>
+</html>

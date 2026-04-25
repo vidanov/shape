@@ -1,8 +1,6 @@
 # Shape
 
-**Guardrails for AI agents that actually work.**
-
-One file. Zero dependencies. Pure Python.
+**Guardrails for AI agents that actually work.** One file. Zero dependencies. Pure Python. MIT License.
 
 ```
 Your agent just mass-emailed 10,000 customers with a hallucinated discount.

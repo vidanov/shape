@@ -1,0 +1,116 @@
+:root {
+    /* Colors */
+    --bg-color: #0f0f12;
+    --text-color: #e0e0e0;
+    --text-muted: #888888;
+
+    --color-determinism: #4a90e2;
+    --color-variance: #f5a623;
+    --color-failure: #d0021b;
+    --color-stability: #7ed321;
+    --color-grid: rgba(255, 255, 255, 0.05);
+
+    /* Typography */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --spacing-section: 120px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #000;
+    color: var(--text-color);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+canvas#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
+main {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-section) 0;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+section.active {
+    opacity: 1;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+}
+
+h1 {
+    font-size: 4rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 2.5rem;
+    /* color removed */
+    border-left: 2px solid var(--color-determinism);
+    padding-left: 1rem;
+}
+
+p {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    max-width: 65ch;
+    /* color removed - was overriding slide text */
+}
+
+.highlight {
+    color: var(--text-color);
+}
+
+/* Technical / Mono Highlights */
+code,
+.mono {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--color-determinism);
+}
+
+/* Specific Section Styles */
+#intro h1 {
+    background: linear-gradient(to right, #fff, #888);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Utility */

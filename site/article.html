@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Why AI Agents Need Guardrails That Aren't Prompts</title>
+    <meta name="description" content="System prompts are suggestions. Shape is enforcement. Phases, transactions, budget gates, and proof traces for any tool-calling AI agent." />
+    <meta name="keywords" content="shape, AI agents, governance, guardrails, tool calling, transactions, budget gates, proof traces, agent control plane" />
+    <meta name="author" content="Alexey Vidanov" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Why AI Agents Need Guardrails That Aren't Prompts" />
+    <meta property="og:description" content="System prompts are suggestions. Shape is enforcement." />
+    <meta property="og:type" content="article" />
+    
+    <!-- Fonts -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('/fonts/inter.woff2') format('woff2');
+            font-weight: 400 600;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Playfair Display';
+            src: url('/fonts/playfair.woff2') format('woff2');
+            font-weight: 400 500;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'JetBrains Mono';
+            src: url('/fonts/jetbrains.woff2') format('woff2');
+            font-weight: 400;
+            font-display: swap;
+        }
+    </style>
+    <style>
+        :root {
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Playfair Display', Georgia, serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        
+        :root, [data-theme="dark"] {
+            --bg: #0f0f12;
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --heading: #fff;
+            --border: rgba(255, 255, 255, 0.1);
+            --highlight-bg: rgba(126, 211, 33, 0.3);
+            --code-bg: rgba(255, 255, 255, 0.05);
+            --box-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="light"] {
+            --bg: #fafafa;
+            --text: #333;
+            --text-muted: #666;
+            --heading: #000;
+            --border: rgba(0, 0, 0, 0.1);
+            --highlight-bg: rgba(126, 211, 33, 0.25);
+            --code-bg: #f0f0f0;
+            --box-bg: #f5f5f5;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 18px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem 6rem;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            z-index: 100;
+            color: var(--text);
+            font-family: var(--font-body);
+        }
+
+        .theme-toggle:hover { border-color: #4a90e2; }
+
+        .back-link {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            color: var(--text);
+            background: var(--code-bg);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .back-link:hover {
+            background: var(--box-bg);
+            border-color: var(--text-muted);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--heading);
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 400;
+            margin: 4rem 0 1.5rem;
+            color: var(--heading);
+        }
+
+        h3 {
+            font-family: var(--font-body);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 3rem 0 1rem;
+            color: var(--heading);
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .highlight {
+            background: linear-gradient(180deg, transparent 60%, var(--highlight-bg) 60%);
+            color: var(--heading);
+        }
+
+        blockquote {
+            border-left: 3px solid #4a90e2;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        ul { margin: 1rem 0 1.5rem 1.5rem; }
+        li { margin-bottom: 0.5rem; color: var(--text); }
+
+        code {
+            font-family: var(--font-mono);
+            background: var(--code-bg);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #4a90e2;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.95rem;
+            color: #7ed321;
+        }
+
+        .summary-box {
+            background: var(--box-bg);
+            border: 1px solid rgba(126, 211, 33, 0.3);
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .summary-box p {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin: 0;
+            color: var(--heading);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 4rem 0;
+            color: var(--text-muted);
+        }
+
+        .divider::before {
+            content: '• • •';
+            letter-spacing: 1em;
+        }
+
+        .pattern-box {
+            background: var(--box-bg);
+            border-left: 3px solid #4a90e2;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .pattern-box h3 { margin-top: 0; font-size: 1.2rem; }
+        .pattern-box p:last-child { margin-bottom: 0; }
+
+        strong { color: var(--heading); }
+
+        a { color: #4a90e2; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #7ed321; }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        th {
+            color: var(--heading);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="/" class="back-link">← Back to visual experience</a>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-text">Dark mode</span>
+    </button>
+    <a href="https://alexey.vidanov.com" target="_blank" rel="noopener" style="position: fixed; bottom: 2rem; left: 2rem; font-family: 'Brush Script MT', cursive; font-size: 1.3rem; color: #9b59b6; opacity: 0.8; text-decoration: none; z-index: 100; transition: opacity 0.2s;">Alexey Vidanov</a>
+    <article class="container">
+
+        <h1>Why AI Agents Need Guardrails That Aren't Prompts</h1>
+        <p class="subtitle">System prompts are suggestions. Shape is enforcement.</p>
+
+        <h2>The Trust Problem</h2>
+
+        <p>We're handing AI agents real tools — databases, APIs, payment systems, cloud infrastructure — and governing them with system prompts.</p>
+
+        <p>That's like giving an intern root access and saying "please be careful."</p>
+
+        <p>System prompts are suggestions. They can be ignored, overridden, or hallucinated around. When an agent has <code>DELETE FROM users</code> as a callable tool, "please don't delete anything important" is not governance. <span class="highlight">It's hope.</span></p>
+
+        <div class="divider"></div>
+
+        <h2>What Goes Wrong</h2>
+
+        <h3>Premature execution</h3>
+        <p>The agent calls a write tool before it's finished reading. It sends an email based on incomplete data. It updates a record before checking if the update makes sense. There's no lifecycle — read and write are equally available at all times.</p>
+
+        <h3>Partial failures</h3>
+        <p>A 3-step workflow fails on step 2. Step 1 already executed. Step 3 never will. Your data is now in an inconsistent state that no one designed for. Databases solved this in 1978 with transactions. We still haven't solved it for AI agents.</p>
+
+        <h3>Runaway costs</h3>
+        <p>The agent makes 400 API calls in a loop. You find out when the bill arrives. By then, the damage — financial and operational — is done. Cost is a metric you check after the fact, not a control signal that changes behavior.</p>
+
+        <h3>Invisible decisions</h3>
+        <p>Something went wrong. You check the logs. You see <em>what</em> happened. You have no idea <em>why</em> the agent thought it was allowed to do it. Was it a governance gap? A misconfigured rule? A missing check? The logs don't say.</p>
+
+        <p><strong>These aren't edge cases. They're the default behavior of every agent framework shipping today.</strong></p>
+
+        <div class="divider"></div>
+
+        <h2>The Convergent Invention</h2>
+
+        <p>Between December 2025 and March 2026, the industry converged on the same insight from different angles:</p>
+
+        <table>
+            <thead>
+                <tr><th>When</th><th>Who</th><th>What</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Dec 2025</td><td>Shape v1</td><td>Explore → Decide → Commit with tool mediation</td></tr>
+                <tr><td>Feb 2026</td><td>Atomix (arxiv)</td><td>Formal transactional model for agent tool calls</td></tr>
+                <tr><td>Mar 2026</td><td>Galileo</td><td>Open-source agent governance (Apache 2.0)</td></tr>
+                <tr><td>Mar 2026</td><td>AWS AgentCore</td><td>Cedar-based policy enforcement</td></tr>
+                <tr><td>Mar 2026</td><td>Forrester</td><td>Names the category "Agent Control Plane"</td></tr>
+            </tbody>
+        </table>
+
+        <p>Each solved part of the problem. None solved all of it.</p>
+
+        <div class="divider"></div>
+
+        <h2>The Four Missing Pieces</h2>
+
+        <h3>1. Phases</h3>
+
+        <p>Agents should have an explicit lifecycle: <strong>Explore → Decide → Commit</strong>.</p>
+
+        <p>In EXPLORE, only read tools work. The agent gathers information. In DECIDE, it evaluates options and proposes actions — still read-only. In COMMIT, write tools unlock, but inside a transaction.</p>
+
+        <p>This isn't a convention. It's enforced. Call a write tool in EXPLORE and you get an exception, not a warning.</p>
+
+        <div class="pattern-box">
+            <h3>Why it matters</h3>
+            <p>An agent that can write before it's done reading will eventually write something wrong. Phases make "read first, act later" structural, not aspirational.</p>
+        </div>
+
+        <h3>2. Transactions</h3>
+
+        <p>When an agent commits, its actions should be atomic. Either all steps succeed, or none of them stick.</p>
+
+        <pre><code>Step 1: Update customer record  ✓
+Step 2: Charge payment method    ✗ (fails)
+Step 3: Send confirmation        (never runs)
+→ Step 1 is automatically compensated (rolled back)</code></pre>
+
+        <div class="pattern-box">
+            <h3>Why it matters</h3>
+            <p>Partial failures create inconsistent state. Inconsistent state creates incidents. Incidents at 3 AM create regret.</p>
+        </div>
+
+        <h3>3. Budget as a Control Signal</h3>
+
+        <p>Most systems treat cost as a metric — something you observe after the fact. Shape treats it as a control signal that changes behavior in real time.</p>
+
+        <table>
+            <thead>
+                <tr><th>Spent</th><th>What happens</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>&lt; 50%</td><td>Normal operation</td></tr>
+                <tr><td>≥ 50%</td><td><strong>DEGRADE</strong> — signal to reduce scope</td></tr>
+                <tr><td>≥ 75%</td><td><strong>FORCE_DECIDE</strong> — blocks COMMIT, forces re-evaluation</td></tr>
+                <tr><td>≥ 100%</td><td><strong>STOP</strong> — all tool calls blocked</td></tr>
+            </tbody>
+        </table>
+
+        <p>Your agent doesn't just run out of money. At 75%, it's <em>forced to stop and think</em>.</p>
+
+        <div class="pattern-box">
+            <h3>Why it matters</h3>
+            <p>A cost dashboard tells you what happened. A budget gate prevents what shouldn't happen.</p>
+        </div>
+
+        <h3>4. Proof Traces</h3>
+
+        <p>Every tool call should produce a structured record of <em>why</em> it was permitted. Not a log line. A decision chain:</p>
+
+        <pre><code>Decision: ALLOWED
+Tool: send_email
+  ✓ Phase is COMMIT (required for irreversible tools)
+  ✓ Transaction T1 is open (effects will be atomic)
+  ✓ Budget: 12% spent (below all thresholds)
+  ✓ Approval granted for irreversible tool
+Executed in 0.003s</code></pre>
+
+        <div class="pattern-box">
+            <h3>Why it matters</h3>
+            <p>When something goes wrong — and it will — you need to know whether the system <em>allowed</em> it or <em>failed to prevent</em> it. That's the difference between a bug and a governance gap.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <h2>The Rule DSL</h2>
+
+        <p>Writing governance rules shouldn't require learning Cedar, Rego, or Python evaluator classes. The people who define safety rules — product managers, compliance officers, team leads — don't write policy languages.</p>
+
+        <p>Shape uses a DSL that reads like English:</p>
+
+        <pre><code>BLOCK send_email WHEN phase IS NOT commit
+BLOCK * WHEN budget ABOVE 90%
+REQUIRE APPROVAL FOR * WHEN tool IS irreversible
+FLAG * WHEN time OUTSIDE 09:00-17:00</code></pre>
+
+        <p>Parseable in ~100 lines of code. No LLM needed at runtime. Readable by anyone who needs to understand what the agent is allowed to do.</p>
+
+        <div class="divider"></div>
+
+        <h2>How It Looks in Practice</h2>
+
+        <pre><code>from shape import Agent, ToolEffect
+
+agent = Agent("customer-service", budget=5.00)
+
+agent.tool("lookup_customer", effect=ToolEffect.READ,         fn=lookup_fn)
+agent.tool("update_record",   effect=ToolEffect.REVERSIBLE,   fn=update_fn)
+agent.tool("send_email",      effect=ToolEffect.IRREVERSIBLE, fn=email_fn)
+
+agent.rules("""
+    BLOCK send_email WHEN phase IS NOT commit
+    REQUIRE APPROVAL FOR * WHEN tool IS irreversible
+""")
+
+# EXPLORE — read only, safe
+with agent.explore() as ctx:
+    customer = ctx.call("lookup_customer", id="C-1234")
+
+# DECIDE — evaluate, propose, no side effects
+with agent.decide() as ctx:
+    plan = ctx.propose(action="send_welcome", to=customer["email"])
+
+# COMMIT — transactional, all-or-nothing
+with agent.commit() as tx:
+    tx.call("update_record", cost=0.01, id="C-1234", status="welcomed")
+    tx.call("send_email",    cost=0.10, to=customer["email"])
+    # if send_email fails → update_record is compensated</code></pre>
+
+        <p>Three phases. One transaction. Full audit trail. The agent can't skip ahead.</p>
+
+        <div class="divider"></div>
+
+        <h2>The Design Philosophy</h2>
+
+        <p><strong>Governance should be external, not embedded.</strong> Shape wraps agents. It doesn't require agents to be built a certain way. LangGraph, CrewAI, Strands, raw Python — same pattern.</p>
+
+        <p><strong>Rules should be readable by non-engineers.</strong> If the person responsible for compliance can't read the governance rules, the governance is theater.</p>
+
+        <p><strong>Zero dependencies means zero excuses.</strong> One Python file. Copy it into your project. No package manager, no config server, no vendor lock-in.</p>
+
+        <p><strong>Small is a feature.</strong> 466 lines is auditable in an afternoon. You can read every line of code that governs your agent. Try that with a managed service.</p>
+
+        <div class="divider"></div>
+
+        <h2>Who This Is For</h2>
+
+        <ul>
+            <li><strong>Agent developers</strong> who want hard guardrails, not prompt engineering</li>
+            <li><strong>Platform teams</strong> building internal agent infrastructure</li>
+            <li><strong>Compliance teams</strong> who need auditable governance they can actually read</li>
+            <li><strong>Anyone</strong> who's given an AI agent a dangerous tool and felt uneasy about it</li>
+        </ul>
+
+        <div class="summary-box">
+            <p style="font-family: var(--font-heading) !important; font-size: 1.8rem !important; line-height: 1.5 !important; font-weight: 400 !important;">
+                Shape doesn't fix agent behavior.<br>
+                It constrains it until only safe behavior survives.
+            </p>
+        </div>
+
+        <p style="text-align: center; margin-top: 3rem;">
+            <a href="https://github.com/avidanov/shape" style="display: inline-block; padding: 1rem 2.5rem; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; font-weight: 500; font-size: 1.1rem;">GitHub → 466 lines, zero dependencies</a>
+        </p>
+
+        <footer>
+            <p>© 2026 Shape — <a href="https://alexey.vidanov.com">Alexey Vidanov</a></p>
+        </footer>
+    </article>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-text').textContent = newTheme === 'light' ? 'Dark mode' : 'Light mode';
+        }
+        
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('theme-text').textContent = saved === 'light' ? 'Dark mode' : 'Light mode';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+</body>
+
+</html>

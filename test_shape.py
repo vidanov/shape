@@ -487,3 +487,56 @@ class TestManufacturingScenario:
 
         assert tx.tx.state == TxState.ABORTED
         assert "mes_undone" in compensated
+
+
+class TestCostFn:
+    def test_cost_fn_tracks_from_result(self):
+        agent = Agent("test", budget=10.00)
+        agent.tool("llm_call", effect=ToolEffect.READ,
+                   fn=lambda **kw: {"text": "hello", "tokens": 500},
+                   cost_fn=lambda r: r["tokens"] * 0.00003)
+        with agent.explore() as ctx:
+            ctx.call("llm_call", prompt="test")
+        assert agent.budget.spent == pytest.approx(0.015)
+        assert agent.traces[-1].budget_spent == pytest.approx(0.015)
+
+    def test_cost_fn_triggers_budget_gate(self):
+        agent = Agent("test", budget=0.10)
+        call_count = [0]
+        def fake_llm(**kw):
+            call_count[0] += 1
+            return {"tokens": 1000}
+        agent.tool("llm_call", effect=ToolEffect.READ,
+                   fn=fake_llm,
+                   cost_fn=lambda r: r["tokens"] * 0.00003)  # $0.03 per call
+        # Calls 1-3: budget goes 0% → 30% → 60% → 90%
+        for _ in range(3):
+            with agent.explore() as ctx:
+                ctx.call("llm_call")
+        assert call_count[0] == 3
+        assert agent.budget.spent == pytest.approx(0.09)
+        # Call 4: budget 90% pre-check, allowed (STOP is at 100%), cost_fn records → 120%
+        with agent.explore() as ctx:
+            ctx.call("llm_call")
+        assert call_count[0] == 4
+        assert agent.budget.pct == pytest.approx(120.0)
+        # Call 5: budget 120% pre-check → STOP gate fires
+        with pytest.raises(RuleViolation):
+            with agent.explore() as ctx:
+                ctx.call("llm_call")
+        assert call_count[0] == 4  # 5th call never executed
+
+    def test_cost_fn_none_is_fine(self):
+        agent = Agent("test", budget=5.00)
+        agent.tool("plain", effect=ToolEffect.READ, fn=lambda **kw: "ok")
+        with agent.explore() as ctx:
+            ctx.call("plain")
+        assert agent.budget.spent == 0.0
+
+    def test_wrap_tool_with_cost_fn(self):
+        agent = Agent("test", budget=10.00)
+        governed = wrap_tool(agent, "llm", lambda **kw: {"tokens": 1000},
+                            ToolEffect.READ, cost_fn=lambda r: r["tokens"] * 0.00003)
+        with agent.explore() as ctx:
+            ctx.call("llm")
+        assert agent.budget.spent == pytest.approx(0.03)

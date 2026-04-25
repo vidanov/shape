@@ -487,13 +487,13 @@ const SCEN = {
         verdict:'allow', ruleIdx:null, reason:'Budget 89.2%. Approaching hard stop.'},
       {phase:'commit', intent:'Analyze reports #890-892 in one batch. $0.05 — this would push budget to 90.2%.',
         tool:'analyze_batch', args:'ids=[890,891,892] model="claude-sonnet"', effect:'rev', cost:0.05,
-        verdict:'block', ruleIdx:1, reason:'Rule 02 fires — budget would exceed 90%. Hard stop. Agent must re-plan with smaller scope.', halt:false},
-      {phase:'commit', intent:'Agent tries to notify the team that it\'s stuck — but even that is blocked at 90%.',
-        tool:'notify_slack', args:'channel="#security" msg="budget exhausted at report 889"', effect:'irr', cost:0.01,
-        verdict:'block', ruleIdx:1, reason:'Rule 02 — budget above 90%. ALL tools blocked, including notifications. Human must intervene.', halt:true},
+        verdict:'block', ruleIdx:1, reason:'Rule 02 fires — budget would exceed 90%. Hard stop. Analysis blocked.', halt:false},
+      {phase:'commit', intent:'Agent notifies the team so a human can intervene — increase budget or switch model.',
+        tool:'notify_slack', args:'channel="#security" msg="paused at report 889/1000 — budget 90%"', effect:'read', cost:0,
+        verdict:'allow', ruleIdx:null, reason:'READ-classified notification — no cost, no side effect on data. Allowed even at 90%.', halt:true},
     ],
-    outcome:{kind:'blocked', head:'Budget gate stopped everything — even the notification.',
-      sub:'889 of 1,000 reports analyzed. Analysis blocked. Slack notification blocked. At 90%, nothing runs. A human must review and either increase the budget or switch to a cheaper model.'}
+    outcome:{kind:'blocked', head:'Analysis stopped. Team notified. Human must decide.',
+      sub:'889 of 1,000 reports done. Analysis blocked at 90% budget. Slack notification sent. A human now decides: increase budget, switch to a cheaper model, or stop.'}
   },
 };
 

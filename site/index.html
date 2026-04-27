@@ -105,7 +105,7 @@
       <div class="slide-content">
         <p class="sub" style="opacity: 0.5; margin-bottom: 0.5rem;">HOW IT WORKS</p>
         <h2>Rules Anyone Can Read</h2>
-        <pre style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.8; color: #7ed321; margin: 1.5rem 0; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto;"><code>BLOCK send_email WHEN phase IS NOT commit
+        <pre style="font-family: 'JetBrains Mono', monospace; font-size: clamp(0.7rem, 2.5vw, 0.95rem); line-height: 1.8; color: #7ed321; margin: 1.5rem 0; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; white-space: pre-wrap; word-break: break-word;"><code>BLOCK send_email WHEN phase IS NOT commit
 BLOCK * WHEN budget ABOVE 90%
 REQUIRE APPROVAL FOR * WHEN tool IS irreversible
 FLAG * WHEN time OUTSIDE 09:00-17:00</code></pre>

@@ -30,12 +30,15 @@
 .slide-content {
     text-align: left;
     max-width: 750px;
+    width: calc(100% - 2rem);
     padding: 3rem;
     z-index: 10;
     background: #0f0f12 !important;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* Typography */
@@ -255,6 +258,23 @@
 @media (max-width: 768px) {
     .slide-content {
         padding: 1.5rem;
+        width: calc(100% - 1rem);
+    }
+
+    .slide-content pre {
+        font-size: 0.75rem !important;
+        padding: 1rem !important;
+        line-height: 1.5 !important;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .slide h2 {
+        font-size: clamp(1.4rem, 5vw, 2.5rem);
+    }
+
+    .slide p {
+        font-size: 1.05rem;
     }
 
     .method-grid {

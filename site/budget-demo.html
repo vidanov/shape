@@ -14,7 +14,7 @@
   --mono: "IBM Plex Mono", monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0 }
-body { background: var(--paper); color: var(--ink); font-family: var(--mono); min-height: 100vh; display: flex; align-items: center; justify-content: center }
+body { background: var(--paper); color: var(--ink); font-family: var(--mono); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding-top: 40px }
 
 .wrap { width: 520px; padding: 32px 0 }
 
@@ -44,13 +44,13 @@ body { background: var(--paper); color: var(--ink); font-family: var(--mono); mi
 .state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor }
 
 /* Alert */
-.alert { display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; animation: flash 0.3s }
-.alert.warn { display: block; background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in oklch, var(--warn) 40%, var(--rule)) }
-.alert.bad { display: block; background: var(--bad-soft); color: var(--bad); border: 1px solid color-mix(in oklch, var(--bad) 40%, var(--rule)) }
+.alert { min-height: 38px; margin-bottom: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; animation: flash 0.3s; visibility: hidden; background: var(--paper); border: 1px solid transparent }
+.alert.warn { visibility: visible; background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in oklch, var(--warn) 40%, var(--rule)) }
+.alert.bad { visibility: visible; background: var(--bad-soft); color: var(--bad); border: 1px solid color-mix(in oklch, var(--bad) 40%, var(--rule)) }
 @keyframes flash { from { transform: scale(1.01) } to { transform: none } }
 
 /* Log */
-.log { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; max-height: 220px; overflow-y: auto }
+.log { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; height: 220px; overflow-y: auto }
 .entry { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 7px 12px; border-radius: 5px; border: 1px solid var(--rule); background: #fbf9f3; animation: slideIn 0.25s ease-out }
 @keyframes slideIn { from { opacity: 0; transform: translateY(-3px) } to { opacity: 1; transform: none } }
 .entry .name { font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
@@ -61,8 +61,8 @@ body { background: var(--paper); color: var(--ink); font-family: var(--mono); mi
 .v.no { background: var(--bad-soft); color: var(--bad) }
 
 /* Streaming indicator */
-.streaming { display: none; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-2); padding: 7px 12px; border: 1px dashed var(--rule); border-radius: 5px; margin-bottom: 4px }
-.streaming.on { display: flex }
+.streaming { visibility: hidden; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-2); padding: 7px 12px; border: 1px dashed var(--rule); border-radius: 5px; margin-bottom: 4px; min-height: 32px }
+.streaming.on { visibility: visible }
 .streaming .dots span { animation: blink 1.2s infinite; opacity: 0.3 }
 .streaming .dots span:nth-child(2) { animation-delay: 0.2s }
 .streaming .dots span:nth-child(3) { animation-delay: 0.4s }
@@ -125,7 +125,7 @@ function updateBar() {
   if (pct >= 90) { f.className = "bar-fill d"; s.className = "state s"; s.textContent = "⛔ stop"; a.className = "alert bad"; a.textContent = "BUDGET EXHAUSTED — all tool calls blocked. Agent must terminate."; }
   else if (pct >= 75) { f.className = "bar-fill w"; s.className = "state f"; s.textContent = "force-decide"; a.className = "alert warn"; a.textContent = "⚠ 75% budget — COMMIT phase blocked. Agent forced to re-evaluate."; }
   else if (pct >= 50) { f.className = "bar-fill w"; s.className = "state w"; s.textContent = "degrade"; a.className = "alert warn"; a.textContent = "⚠ 50% budget — agent scope reduced. Non-essential calls skipped."; }
-  else { f.className = "bar-fill"; s.className = "state"; s.textContent = "normal"; a.className = "alert"; }
+  else { f.className = "bar-fill"; s.className = "state"; s.textContent = "normal"; a.className = "alert"; a.textContent = "\u00A0"; }
 }
 
 function addEntry(step, blocked) {

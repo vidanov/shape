@@ -103,15 +103,11 @@ body { background: var(--paper); color: var(--ink); font-family: var(--mono); mi
 <script>
 const BUDGET = 5.00;
 const STEPS = [
-  { tool: "call_llm", label: "Planning next steps", tokens: 1240, cost: 0.45 },
-  { tool: "read_db", label: "Fetch customer records", tokens: 0, cost: 0.02 },
-  { tool: "call_llm", label: "Analyzing customer data", tokens: 2100, cost: 0.78 },
-  { tool: "update_crm", label: "Update customer tier", tokens: 0, cost: 0.05 },
-  { tool: "call_llm", label: "Drafting email content", tokens: 3400, cost: 1.25 },
-  { tool: "call_llm", label: "Generating follow-up plan", tokens: 1800, cost: 0.68 },
-  { tool: "send_email", label: "Send welcome email", tokens: 0, cost: 0.30 },
-  { tool: "call_llm", label: "Summarizing actions", tokens: 2600, cost: 0.95 },
-  { tool: "send_sms", label: "Send SMS notification", tokens: 0, cost: 0.20 },
+  { tool: "call_llm", label: "Analyzing request", tokens: 2400, cost: 0.90 },
+  { tool: "call_llm", label: "Planning actions", tokens: 3100, cost: 1.15 },
+  { tool: "call_llm", label: "Drafting response", tokens: 4200, cost: 1.55 },
+  { tool: "call_llm", label: "Generating follow-up", tokens: 3800, cost: 1.40 },
+  { tool: "send_email", label: "Send result", tokens: 0, cost: 0.30 },
 ];
 
 let spent = 0, running = false;

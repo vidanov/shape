@@ -286,11 +286,31 @@ python -m pytest test_shape.py -v
 
 ## Why This Exists
 
+The industry calls it **harness engineering** — designing guardrails, feedback loops, and constraints around AI agents instead of improving the model itself. OpenAI, LangChain, and Martin Fowler have all written about it. Shape is a concrete implementation of the runtime governance slice.
+
 Between December 2025 and March 2026, at least four independent groups arrived at the same insight: AI agents need lifecycle governance. Galileo built observability. AWS built Cedar policies. Atomix formalized transactions. Forrester named the category "Agent Control Plane."
 
 Nobody combined phases + transactions + budget gates + proof traces in one place.
 
 Shape does. In a single file.
+
+## CLI Agent Integrations
+
+Shape can govern existing coding agents via their hook systems (Architecture A: Shape as hook). Each integration enforces phase gates, budget limits, and rule evaluation on every tool call.
+
+| Agent | Directory | Hook mechanism |
+|-------|-----------|---------------|
+| [Kiro CLI](https://kiro.dev) | [`kiro/`](kiro/README.md) | `preToolUse` / `postToolUse` in agent JSON |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`claude/`](claude/README.md) | `PreToolUse` / `PostToolUse` in `.claude/settings.json` |
+| [OpenAI Codex CLI](https://github.com/openai/codex) | [`codex/`](codex/README.md) | `pre_tool_use` / `post_tool_use` in config |
+
+**Limitations (Architecture A — all integrations):**
+- No transactional atomicity — each tool call is independent
+- No compensation/rollback on failure
+- Budget is estimated, not actual API cost
+- Phase transitions are manual (user runs `shape-transition`)
+
+For full SHAPE governance including transactions, use Architecture B (SHAPE as orchestrator wrapping the agent).
 
 ## License
 

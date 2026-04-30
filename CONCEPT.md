@@ -39,6 +39,24 @@ Each solved part of the problem. None solved all of it.
 | Structured proof traces (why, not just what) | Nobody |
 | Rules readable by non-developers | Nobody (Cedar and Rego require engineers) |
 
+## Where Shape fits in harness engineering
+
+Harness engineering is the emerging discipline of designing the surrounding environment — guardrails, feedback loops, validation tools, and constraints — that makes AI agents reliable. Instead of improving the model, you improve everything around it.
+
+The core components of harness engineering:
+
+| Component | What it means | Shape's role |
+|-----------|--------------|-------------|
+| **Structured workflows** | Human-in-the-loop checkpoints, task decomposition | **Phases** — Explore → Decide → Commit with hard enforcement |
+| **Verification mechanisms** | Automated tests proving the agent's work is correct | **Proof traces** — structured decision chains for every tool call |
+| **Feedback loops** | Force re-evaluation until criteria are met | **Budget gates** — behavioral changes at thresholds (DEGRADE → FORCE_DECIDE → STOP) |
+| **State management** | Track progress across sessions | **Transactions** — atomic state with compensation on failure |
+| **Controlled tools** | Define what the agent can access | **Effect classification** + **Rule DSL** — READ/REVERSIBLE/IRREVERSIBLE with readable rules |
+
+Shape doesn't replace your CI pipeline, prompt design, or session persistence. It's the **runtime governance layer** — the piece that ensures your agent can't write to a PLC during the explore phase, blow past its budget, or leave your data in an inconsistent state after a partial failure.
+
+The harness engineering framing comes from OpenAI, LangChain, and Martin Fowler's work on agent reliability. Shape implements the runtime slice of that discipline as a single-file library.
+
 ## The four missing pieces
 
 ### 1. Phases

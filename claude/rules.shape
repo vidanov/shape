@@ -1,0 +1,10 @@
+# SHAPE rules for Claude Code
+# Syntax: ACTION tool_pattern WHEN condition [AND condition]
+
+BLOCK write WHEN phase IS NOT commit
+BLOCK edit WHEN phase IS NOT commit
+BLOCK bash WHEN phase IS NOT commit
+
+BLOCK * WHEN budget ABOVE 90%
+
+FLAG bash WHEN phase IS commit

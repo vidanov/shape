@@ -192,19 +192,41 @@ def _compare(actual: Any, op: str, val: str) -> bool:
 # ── Budget manager ───────────────────────────────────────────────────────────
 
 class BudgetManager:
-    def __init__(self, limit: float):
+    def __init__(self, limit: float, slope_threshold: Optional[float] = None):
         self.limit = limit
         self.spent = 0.0
+        self.slope_threshold = slope_threshold  # cost/second that triggers PAUSE
+        self.history: list[tuple[float, float]] = []  # (timestamp, amount)
+        self.tokens_in = 0
+        self.tokens_out = 0
 
     @property
     def pct(self) -> float:
         return (self.spent / self.limit * 100) if self.limit > 0 else 0.0
 
-    def record(self, amount: float):
+    def record(self, amount: float, tokens_in: int = 0, tokens_out: int = 0):
         self.spent += amount
+        self.tokens_in += tokens_in
+        self.tokens_out += tokens_out
+        self.history.append((time.monotonic(), amount))
+
+    def slope(self) -> float:
+        """Cost per second over last 60s window."""
+        if len(self.history) < 2:
+            return 0.0
+        now = time.monotonic()
+        recent = [(t, a) for t, a in self.history if now - t < 60]
+        if len(recent) < 2:
+            recent = self.history[-10:]
+        if len(recent) < 2:
+            return 0.0
+        span = recent[-1][0] - recent[0][0]
+        return sum(a for _, a in recent) / span if span > 0 else 0.0
 
     def check_gate(self) -> Optional[str]:
         """Return action if a budget gate is hit."""
+        if self.slope_threshold and self.slope() > self.slope_threshold:
+            return "PAUSE"
         if self.pct >= 100:
             return "STOP"
         if self.pct >= 75:
@@ -263,9 +285,9 @@ class ApprovalRequired(ShapeError):
 # ── Agent (main API) ─────────────────────────────────────────────────────────
 
 class Agent:
-    def __init__(self, name: str, budget: float = 0.0):
+    def __init__(self, name: str, budget: float = 0.0, slope_threshold: Optional[float] = None):
         self.name = name
-        self.budget = BudgetManager(budget) if budget > 0 else None
+        self.budget = BudgetManager(budget, slope_threshold=slope_threshold) if budget > 0 else None
         self.phase = PhaseManager()
         self.tools: dict[str, dict] = {}
         self._rules: list[Rule] = []
@@ -329,6 +351,9 @@ class Agent:
             if budget_gate == "STOP":
                 decision = "BLOCKED"
                 rules_log.append({"check": "budget", "passed": False, "detail": f"Budget exhausted ({self.budget.pct:.0f}%)"})
+            elif budget_gate == "PAUSE":
+                decision = "BLOCKED"
+                rules_log.append({"check": "budget", "passed": False, "detail": f"Cost slope too steep ({self.budget.slope():.4f}/s), pausing"})
             elif budget_gate == "FORCE_DECIDE" and self.phase.current == Phase.COMMIT:
                 decision = "BLOCKED"
                 rules_log.append({"check": "budget", "passed": False, "detail": f"Budget ≥75% ({self.budget.pct:.0f}%), forcing re-evaluation"})
@@ -392,11 +417,19 @@ class Agent:
         trace.duration_s = time.monotonic() - (time.monotonic() - trace.duration_s)
 
         # Auto-record cost from cost_fn if provided
+        # cost_fn can return float (cost only) or dict {"cost": float, "tokens_in": int, "tokens_out": int}
         if tool_info.get("cost_fn") and self.budget:
             try:
-                cost = tool_info["cost_fn"](result)
-                if cost and cost > 0:
-                    self.budget.record(cost)
+                cost_result = tool_info["cost_fn"](result)
+                if isinstance(cost_result, dict):
+                    cost = cost_result.get("cost", 0)
+                    tokens_in = cost_result.get("tokens_in", 0)
+                    tokens_out = cost_result.get("tokens_out", 0)
+                    if cost > 0:
+                        self.budget.record(cost, tokens_in=tokens_in, tokens_out=tokens_out)
+                        trace.budget_spent = self.budget.spent
+                elif cost_result and cost_result > 0:
+                    self.budget.record(cost_result)
                     trace.budget_spent = self.budget.spent
             except Exception:
                 pass  # cost_fn failure should not block execution

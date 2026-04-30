@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "pre_tool_use": "python3 /path/to/shape/codex/gate.py",
+    "post_tool_use": "python3 /path/to/shape/codex/trace.py"
+  }
+}

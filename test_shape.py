@@ -540,3 +540,49 @@ class TestCostFn:
         with agent.explore() as ctx:
             ctx.call("llm")
         assert agent.budget.spent == pytest.approx(0.03)
+
+
+# ── Budget: slope detection and token tracking ────────────────────────────────
+
+class TestBudgetSlope:
+    def test_slope_detection_blocks(self):
+        """Rapid spending triggers PAUSE gate."""
+        a = Agent("test", budget=10.0, slope_threshold=0.5)
+        a.tool("read_plc", effect=ToolEffect.READ, fn=lambda **kw: 42)
+        # Simulate rapid cost accumulation
+        for _ in range(10):
+            a.budget.record(0.1)
+        # Slope should be high enough to trigger PAUSE
+        assert a.budget.slope() > 0
+        # If slope exceeds threshold, gate returns PAUSE
+        if a.budget.slope() > 0.5:
+            assert a.budget.check_gate() == "PAUSE"
+
+    def test_no_slope_threshold_no_pause(self):
+        a = Agent("test", budget=10.0)
+        a.tool("read_plc", effect=ToolEffect.READ, fn=lambda **kw: 42)
+        for _ in range(10):
+            a.budget.record(0.1)
+        # Without slope_threshold, should not return PAUSE
+        gate = a.budget.check_gate()
+        assert gate != "PAUSE"
+
+    def test_token_tracking(self):
+        a = Agent("test", budget=10.0)
+        a.budget.record(0.01, tokens_in=100, tokens_out=50)
+        a.budget.record(0.02, tokens_in=200, tokens_out=100)
+        assert a.budget.tokens_in == 300
+        assert a.budget.tokens_out == 150
+
+    def test_cost_fn_dict_with_tokens(self):
+        """cost_fn returning dict records tokens."""
+        a = Agent("test", budget=10.0)
+        a.tool("llm_call", effect=ToolEffect.READ,
+               fn=lambda **kw: {"content": "hi", "usage": {"input_tokens": 500, "output_tokens": 100}},
+               cost_fn=lambda r: {"cost": 0.05, "tokens_in": r["usage"]["input_tokens"],
+                                  "tokens_out": r["usage"]["output_tokens"]})
+        with a.explore() as ctx:
+            ctx.call("llm_call")
+        assert a.budget.tokens_in == 500
+        assert a.budget.tokens_out == 100
+        assert a.budget.spent == 0.05

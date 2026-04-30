@@ -1,0 +1,11 @@
+# SHAPE rules for OpenAI Codex CLI
+# Syntax: ACTION tool_pattern WHEN condition [AND condition]
+
+BLOCK write_file WHEN phase IS NOT commit
+BLOCK apply_patch WHEN phase IS NOT commit
+BLOCK create_file WHEN phase IS NOT commit
+BLOCK shell WHEN phase IS NOT commit
+
+BLOCK * WHEN budget ABOVE 90%
+
+FLAG shell WHEN phase IS commit

@@ -9,7 +9,7 @@ It had the tool. It had the permission. Nobody told it to stop.
 
 Shape prevents this.
 
-![Shape budget control demo](https://vidanov.github.io/shape/budget-demo.gif)
+![Shape budget control demo](site/budget-demo.gif)
 
 🌐 [Visual explainer](https://vidanov.github.io/shape/) · 🎮 [Interactive demo](https://vidanov.github.io/shape/demo.html) · 📄 [Full article](https://vidanov.github.io/shape/article.html)
 

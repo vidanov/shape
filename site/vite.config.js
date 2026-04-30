@@ -9,6 +9,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         article: resolve(__dirname, 'article.html'),
         demo: resolve(__dirname, 'demo.html'),
+        'budget-demo': resolve(__dirname, 'budget-demo.html'),
       },
     },
   },

@@ -3,351 +3,175 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Shape — Budget Control Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<title>Shape — Budget Control</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
 <style>
 :root {
-  --paper: #f4f1ea;
-  --ink: #1c1b18;
-  --ink-2: #46443d;
-  --ink-3: #7a766c;
-  --rule: #d4cdbc;
-  --ok: oklch(0.58 0.10 135);
-  --ok-soft: oklch(0.93 0.05 135);
-  --warn: oklch(0.66 0.16 60);
-  --warn-soft: oklch(0.94 0.06 60);
-  --bad: oklch(0.54 0.18 28);
-  --bad-soft: oklch(0.94 0.07 28);
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --sans: "Inter", system-ui, sans-serif;
+  --paper: #f4f1ea; --ink: #1c1b18; --ink-2: #46443d; --ink-3: #7a766c; --rule: #d4cdbc;
+  --ok: oklch(0.58 0.10 135); --ok-soft: oklch(0.93 0.05 135);
+  --warn: oklch(0.66 0.16 60); --warn-soft: oklch(0.94 0.06 60);
+  --bad: oklch(0.54 0.18 28); --bad-soft: oklch(0.94 0.07 28);
+  --mono: "IBM Plex Mono", monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0 }
-html, body { background: var(--paper); color: var(--ink); font-family: var(--sans); min-height: 100vh; -webkit-font-smoothing: antialiased }
+body { background: var(--paper); color: var(--ink); font-family: var(--mono); min-height: 100vh; display: flex; align-items: center; justify-content: center }
 
-.container {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 60px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
-}
+.wrap { width: 520px; padding: 32px 0 }
 
 /* Header */
-.header {
-  text-align: center;
-}
-.brand {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-}
-.subtitle {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--ink-3);
-  letter-spacing: 0.04em;
-}
+.head { text-align: center; margin-bottom: 28px }
+.head h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em }
+.head p { font-size: 11px; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.04em }
 
-/* Budget widget */
-.budget-card {
-  width: 100%;
-  border: 1.5px solid var(--rule);
-  border-radius: 12px;
-  background: #fbf9f3;
-  padding: 28px 32px;
-}
-.budget-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 16px;
-}
-.budget-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.budget-value {
-  font-family: var(--mono);
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.budget-value .limit {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--ink-3);
-}
+/* Budget */
+.budget { background: #fbf9f3; border: 1.5px solid var(--rule); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px }
+.budget-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px }
+.budget-top .label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3) }
+.budget-top .val { font-size: 20px; font-weight: 700 }
+.budget-top .val .lim { font-size: 12px; font-weight: 400; color: var(--ink-3) }
+.bar { position: relative; height: 10px; border-radius: 99px; background: var(--paper); border: 1px solid var(--rule); overflow: hidden }
+.bar-fill { height: 100%; width: 0%; border-radius: 99px; background: var(--ok); transition: width 0.4s ease, background 0.3s }
+.bar-fill.w { background: var(--warn) }
+.bar-fill.d { background: var(--bad) }
+.ticks { position: absolute; inset: 0; pointer-events: none }
+.ticks span { position: absolute; top: -1px; width: 1.5px; height: 12px; background: var(--ink-3); opacity: 0.3 }
+.ticks .t50 { left: 50% } .ticks .t75 { left: 75% } .ticks .t90 { left: 90% }
+.marks { display: flex; justify-content: space-between; font-size: 9px; color: var(--ink-3); margin-top: 4px }
+.state { margin-top: 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 10px; border-radius: 4px; display: inline-flex; align-items: center; gap: 6px; background: var(--ok-soft); color: var(--ok); transition: all 0.3s }
+.state.w { background: var(--warn-soft); color: var(--warn) }
+.state.f { background: var(--warn-soft); color: #9c5a0d }
+.state.s { background: var(--bad-soft); color: var(--bad) }
+.state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor }
 
-/* Bar */
-.bar-wrap {
-  position: relative;
-  height: 12px;
-  border-radius: 99px;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-.bar-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: 99px;
-  background: var(--ok);
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s;
-}
-.bar-fill.warn { background: var(--warn) }
-.bar-fill.danger { background: var(--bad) }
+/* Alert */
+.alert { display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; animation: flash 0.3s }
+.alert.warn { display: block; background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in oklch, var(--warn) 40%, var(--rule)) }
+.alert.bad { display: block; background: var(--bad-soft); color: var(--bad); border: 1px solid color-mix(in oklch, var(--bad) 40%, var(--rule)) }
+@keyframes flash { from { transform: scale(1.01) } to { transform: none } }
 
-.bar-ticks {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.bar-ticks span {
-  position: absolute;
-  top: -2px;
-  width: 1.5px;
-  height: 16px;
-  background: var(--ink-3);
-  opacity: 0.3;
-}
-.bar-ticks .t50 { left: 50% }
-.bar-ticks .t75 { left: 75% }
-.bar-ticks .t90 { left: 90% }
+/* Log */
+.log { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; max-height: 220px; overflow-y: auto }
+.entry { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 7px 12px; border-radius: 5px; border: 1px solid var(--rule); background: #fbf9f3; animation: slideIn 0.25s ease-out }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-3px) } to { opacity: 1; transform: none } }
+.entry .name { font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.entry .tokens { color: var(--ink-3); font-size: 10px }
+.entry .cost { color: var(--ink-2); min-width: 44px; text-align: right }
+.entry .v { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px }
+.v.ok { background: var(--ok-soft); color: var(--ok) }
+.v.no { background: var(--bad-soft); color: var(--bad) }
 
-.bar-labels {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--ink-3);
-  margin-bottom: 16px;
-}
+/* Streaming indicator */
+.streaming { display: none; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-2); padding: 7px 12px; border: 1px dashed var(--rule); border-radius: 5px; margin-bottom: 4px }
+.streaming.on { display: flex }
+.streaming .dots span { animation: blink 1.2s infinite; opacity: 0.3 }
+.streaming .dots span:nth-child(2) { animation-delay: 0.2s }
+.streaming .dots span:nth-child(3) { animation-delay: 0.4s }
+@keyframes blink { 50% { opacity: 1 } }
 
-/* State badge */
-.state-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 6px 12px;
-  border-radius: 4px;
-  background: var(--ok-soft);
-  color: var(--ok);
-  transition: all 0.4s;
-}
-.state-badge.degrade { background: var(--warn-soft); color: var(--warn) }
-.state-badge.force { background: var(--warn-soft); color: #9c5a0d }
-.state-badge.stop { background: var(--bad-soft); color: var(--bad) }
-.state-badge::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-/* Tool calls log */
-.log {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 120px;
-}
-.log-entry {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--rule);
-  background: #fbf9f3;
-  animation: slideIn 0.3s ease-out;
-}
-@keyframes slideIn { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
-
-.log-entry .tool { font-weight: 600; color: var(--ink) }
-.log-entry .cost { color: var(--ink-3); margin-left: auto }
-.log-entry .verdict {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 3px;
-}
-.verdict.allowed { background: var(--ok-soft); color: var(--ok) }
-.verdict.blocked { background: var(--bad-soft); color: var(--bad) }
-
-/* Button */
-.run-btn {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
-  padding: 12px 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.run-btn:hover { transform: scale(1.02) }
-.run-btn:active { transform: scale(0.98) }
-.run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none }
-
-/* Footer */
-.footer {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--ink-3);
-  text-align: center;
-}
-.footer a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule) }
+.btn { width: 100%; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; background: var(--ink); color: var(--paper); border: none; padding: 12px; border-radius: 6px; cursor: pointer }
+.btn:hover { background: #000 }
+.btn:disabled { opacity: 0.4; cursor: not-allowed }
+.foot { text-align: center; margin-top: 16px; font-size: 9px; color: var(--ink-3) }
+.foot a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--rule) }
 </style>
 </head>
 <body>
-
-<div class="container">
-  <div class="header">
-    <div class="brand">shape</div>
-    <div class="subtitle">budget controls what the agent can do</div>
+<div class="wrap">
+  <div class="head">
+    <h1>shape</h1>
+    <p>budget controls what the agent can do — not just what it costs</p>
   </div>
 
-  <div class="budget-card">
-    <div class="budget-header">
-      <span class="budget-label">Agent Budget</span>
-      <span class="budget-value">$<span id="spent">0.00</span> <span class="limit">/ $5.00</span></span>
+  <div class="budget">
+    <div class="budget-top">
+      <span class="label">Agent Budget</span>
+      <span class="val">$<span id="spent">0.00</span> <span class="lim">/ $5.00</span></span>
     </div>
-    <div class="bar-wrap">
-      <div class="bar-fill" id="bar-fill"></div>
-      <div class="bar-ticks"><span class="t50"></span><span class="t75"></span><span class="t90"></span></div>
-    </div>
-    <div class="bar-labels"><span>0%</span><span>50% degrade</span><span>75% force-decide</span><span>90% stop</span></div>
-    <div class="state-badge" id="state-badge">normal</div>
+    <div class="bar"><div class="bar-fill" id="fill"></div><div class="ticks"><span class="t50"></span><span class="t75"></span><span class="t90"></span></div></div>
+    <div class="marks"><span>0%</span><span>50%</span><span>75%</span><span>90%</span><span>100%</span></div>
+    <div class="state" id="state">normal</div>
   </div>
 
+  <div class="alert" id="alert"></div>
+  <div class="streaming" id="stream"><span>streaming tokens</span><span class="dots"><span>.</span><span>.</span><span>.</span></span><span id="stream-count"></span></div>
   <div class="log" id="log"></div>
 
-  <button class="run-btn" id="run-btn">▶ Run agent</button>
-
-  <div class="footer">
-    <a href="./">shape</a> · <a href="./demo.html">full demo</a> · <a href="https://github.com/vidanov/shape">github</a>
-  </div>
+  <button class="btn" id="btn">▶ run agent</button>
+  <div class="foot"><a href="./">shape</a> · <a href="./demo.html">full demo</a> · <a href="https://github.com/vidanov/shape">github</a></div>
 </div>
 
 <script>
 const BUDGET = 5.00;
-const CALLS = [
-  { tool: "lookup_customer", cost: 0.00, effect: "read" },
-  { tool: "call_llm",       cost: 0.80, effect: "read" },
-  { tool: "evaluate_tier",  cost: 0.00, effect: "read" },
-  { tool: "call_llm",       cost: 1.20, effect: "read" },
-  { tool: "update_record",  cost: 0.50, effect: "write" },
-  { tool: "call_llm",       cost: 1.10, effect: "read" },
-  { tool: "send_email",     cost: 0.30, effect: "write" },
-  { tool: "call_llm",       cost: 0.90, effect: "read" },
-  { tool: "send_sms",       cost: 0.20, effect: "write" },
+const STEPS = [
+  { tool: "call_llm", label: "Planning next steps", tokens: 1240, cost: 0.45 },
+  { tool: "read_db", label: "Fetch customer records", tokens: 0, cost: 0.02 },
+  { tool: "call_llm", label: "Analyzing customer data", tokens: 2100, cost: 0.78 },
+  { tool: "update_crm", label: "Update customer tier", tokens: 0, cost: 0.05 },
+  { tool: "call_llm", label: "Drafting email content", tokens: 3400, cost: 1.25 },
+  { tool: "call_llm", label: "Generating follow-up plan", tokens: 1800, cost: 0.68 },
+  { tool: "send_email", label: "Send welcome email", tokens: 0, cost: 0.30 },
+  { tool: "call_llm", label: "Summarizing actions", tokens: 2600, cost: 0.95 },
+  { tool: "send_sms", label: "Send SMS notification", tokens: 0, cost: 0.20 },
 ];
 
-let spent = 0;
-let step = 0;
-let running = false;
+let spent = 0, running = false;
+const $ = id => document.getElementById(id);
 
-const $spent = document.getElementById("spent");
-const $fill = document.getElementById("bar-fill");
-const $badge = document.getElementById("state-badge");
-const $log = document.getElementById("log");
-const $btn = document.getElementById("run-btn");
-
-function updateBudget() {
+function updateBar() {
   const pct = (spent / BUDGET) * 100;
-  $spent.textContent = spent.toFixed(2);
-  $fill.style.width = Math.min(pct, 100) + "%";
-
-  if (pct >= 90) {
-    $fill.className = "bar-fill danger";
-    $badge.className = "state-badge stop";
-    $badge.textContent = "⛔ stop — all calls blocked";
-  } else if (pct >= 75) {
-    $fill.className = "bar-fill warn";
-    $badge.className = "state-badge force";
-    $badge.textContent = "force-decide — commit blocked";
-  } else if (pct >= 50) {
-    $fill.className = "bar-fill warn";
-    $badge.className = "state-badge degrade";
-    $badge.textContent = "degrade — reduce scope";
-  } else {
-    $fill.className = "bar-fill";
-    $badge.className = "state-badge";
-    $badge.textContent = "normal";
-  }
+  $("spent").textContent = spent.toFixed(2);
+  $("fill").style.width = Math.min(pct, 100) + "%";
+  const f = $("fill"), s = $("state"), a = $("alert");
+  if (pct >= 90) { f.className = "bar-fill d"; s.className = "state s"; s.textContent = "⛔ stop"; a.className = "alert bad"; a.textContent = "BUDGET EXHAUSTED — all tool calls blocked. Agent must terminate."; }
+  else if (pct >= 75) { f.className = "bar-fill w"; s.className = "state f"; s.textContent = "force-decide"; a.className = "alert warn"; a.textContent = "⚠ 75% budget — COMMIT phase blocked. Agent forced to re-evaluate."; }
+  else if (pct >= 50) { f.className = "bar-fill w"; s.className = "state w"; s.textContent = "degrade"; a.className = "alert warn"; a.textContent = "⚠ 50% budget — agent scope reduced. Non-essential calls skipped."; }
+  else { f.className = "bar-fill"; s.className = "state"; s.textContent = "normal"; a.className = "alert"; }
 }
 
-function addLogEntry(call, blocked) {
+function addEntry(step, blocked) {
   const el = document.createElement("div");
-  el.className = "log-entry";
-  el.innerHTML = `
-    <span class="tool">${call.tool}</span>
-    <span class="cost">${call.cost > 0 ? "$" + call.cost.toFixed(2) : "—"}</span>
-    <span class="verdict ${blocked ? "blocked" : "allowed"}">${blocked ? "blocked" : "allowed"}</span>
-  `;
-  $log.appendChild(el);
-  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  el.className = "entry";
+  el.innerHTML = `<span class="name">${step.tool}</span>${step.tokens ? `<span class="tokens">${step.tokens} tok</span>` : ""}<span class="cost">$${step.cost.toFixed(2)}</span><span class="v ${blocked ? "no" : "ok"}">${blocked ? "blocked" : "ok"}</span>`;
+  $("log").appendChild(el);
+  $("log").scrollTop = $("log").scrollHeight;
 }
 
-async function runAgent() {
+async function streamTokens(count) {
+  $("stream").classList.add("on");
+  const dur = Math.min(400 + count * 0.1, 1200);
+  let shown = 0;
+  const interval = setInterval(() => { shown = Math.min(shown + Math.floor(count / (dur / 50)), count); $("stream-count").textContent = shown + " tok"; }, 50);
+  await new Promise(r => setTimeout(r, dur));
+  clearInterval(interval);
+  $("stream-count").textContent = count + " tok";
+  await new Promise(r => setTimeout(r, 200));
+  $("stream").classList.remove("on");
+}
+
+async function run() {
   if (running) return;
   running = true;
-  $btn.disabled = true;
-  $btn.textContent = "running…";
+  $("btn").disabled = true;
+  $("btn").textContent = "running…";
+  spent = 0; $("log").innerHTML = ""; $("alert").className = "alert"; updateBar();
 
-  // Reset
-  spent = 0;
-  step = 0;
-  $log.innerHTML = "";
-  updateBudget();
-
-  for (const call of CALLS) {
-    await new Promise(r => setTimeout(r, 700));
-
+  for (const step of STEPS) {
+    await new Promise(r => setTimeout(r, 300));
     const pct = (spent / BUDGET) * 100;
     const blocked = pct >= 90;
 
-    if (!blocked) {
-      spent += call.cost;
-    }
-
-    addLogEntry(call, blocked);
-    updateBudget();
-    step++;
+    if (step.tokens > 0 && !blocked) await streamTokens(step.tokens);
+    if (!blocked) spent += step.cost;
+    addEntry(step, blocked);
+    updateBar();
   }
 
-  await new Promise(r => setTimeout(r, 500));
   running = false;
-  $btn.disabled = false;
-  $btn.textContent = "▶ Run again";
+  $("btn").disabled = false;
+  $("btn").textContent = "▶ run again";
 }
 
-$btn.addEventListener("click", runAgent);
+$("btn").onclick = run;
 </script>
 </body>
 </html>

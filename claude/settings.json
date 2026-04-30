@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "command": "python3 /path/to/shape/claude/gate.py"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "command": "python3 /path/to/shape/claude/trace.py"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "shape-governed",
+  "description": "Kiro agent governed by SHAPE — phase enforcement, budget gates, proof traces",
+  "prompt": "You are operating under SHAPE governance. Your tool calls are gated by phase (explore/decide/commit), budget limits, and rules. In EXPLORE phase, only read tools work. To write files or run commands, the user must transition you to COMMIT phase. Respect the phase model: gather information first, propose changes, then execute with permission.",
+  "tools": ["*"],
+  "allowedTools": ["read", "glob", "grep", "knowledge", "web_search", "web_fetch"],
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "*",
+        "command": "python3 /Users/a.vidanov/Documents/PROJECTS/RESEARCH/shape/kiro/gate.py"
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "*",
+        "command": "python3 /Users/a.vidanov/Documents/PROJECTS/RESEARCH/shape/kiro/trace.py"
+      }
+    ]
+  }
+}

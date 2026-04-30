@@ -1,0 +1,13 @@
+# SHAPE rules for Kiro CLI
+# Syntax: ACTION tool_pattern WHEN condition [AND condition]
+
+# Block all writes outside commit phase (enforced by gate.py, but explicit here too)
+BLOCK fs_write WHEN phase IS NOT commit
+BLOCK execute_bash WHEN phase IS NOT commit
+BLOCK use_aws WHEN phase IS NOT commit
+
+# Block everything when budget is nearly exhausted
+BLOCK * WHEN budget ABOVE 90%
+
+# Flag AWS calls for awareness
+FLAG use_aws WHEN phase IS commit

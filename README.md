@@ -1,27 +1,63 @@
 # Shape
 
-**Shape: governance for AI agents that actually works.** One file. Zero dependencies. Pure Python. MIT License.
+**Governance for AI agents. One file. Zero dependencies.**
 
 ```
 Your agent just mass-emailed 10,000 customers with a hallucinated discount.
 It had the tool. It had the permission. Nobody told it to stop.
 ```
 
-Shape prevents this. It wraps any tool-calling agent with hard governance — not guidelines, not prompts, not vibes.
+Shape prevents this.
 
-🌐 [Visual explainer](https://vidanov.github.io/shape/) · 📄 [Full article](https://vidanov.github.io/shape/article.html) · 🎮 [Interactive demo](https://vidanov.github.io/shape/demo.html)
+🌐 [Visual explainer](https://vidanov.github.io/shape/) · 🎮 [Interactive demo](https://vidanov.github.io/shape/demo.html) · 📄 [Full article](https://vidanov.github.io/shape/article.html)
 
-## The Problem
+---
 
-AI agents are getting tool access: databases, APIs, payment systems, infrastructure. The frameworks that power them (LangGraph, CrewAI, Strands) optimize for *capability*. None of them optimize for *permission*.
+## What it does
 
-What's missing:
-- **No lifecycle phases.** Agents can write before they've finished reading.
-- **No transactions.** A 3-step action fails halfway — step 1 sticks, steps 2-3 don't.
-- **No budget control.** Cost is a metric you check after the damage.
-- **No audit trail.** You know *what* happened, not *why it was allowed*.
+```python
+from shape import Agent, ToolEffect
 
-Shape fills all four gaps.
+agent = Agent("customer-service", budget=5.00)
+
+agent.tool("lookup_customer", effect=ToolEffect.READ,         fn=lookup_fn)
+agent.tool("update_record",   effect=ToolEffect.REVERSIBLE,   fn=update_fn)
+agent.tool("send_email",      effect=ToolEffect.IRREVERSIBLE, fn=email_fn)
+
+agent.rules("""
+    BLOCK send_email WHEN phase IS NOT commit
+    BLOCK * WHEN budget ABOVE 90%
+""")
+
+# EXPLORE → read only, safe
+with agent.explore() as ctx:
+    customer = ctx.call("lookup_customer", id="C-1234")
+
+# COMMIT → transactional, all-or-nothing
+with agent.commit() as tx:
+    tx.call("update_record", cost=0.01, id="C-1234", status="welcomed")
+    tx.call("send_email",    cost=0.10, to=customer["email"], template="welcome")
+    # if send_email fails → update_record is compensated automatically
+```
+
+**Three phases. One transaction. Full audit trail.**
+
+---
+
+## Why Shape exists
+
+AI agents get tool access — databases, APIs, payments, infrastructure. The frameworks (LangGraph, CrewAI, Strands) optimize for *capability*. None optimize for *permission*.
+
+| Gap | What goes wrong |
+|-----|----------------|
+| No lifecycle phases | Agent writes before it finishes reading |
+| No transactions | 3-step action fails halfway — step 1 sticks |
+| No budget control | Cost is a metric you check *after* the damage |
+| No audit trail | You know *what* happened, not *why it was allowed* |
+
+Shape fills all four. In ~400 lines of Python.
+
+---
 
 ## Install
 
@@ -29,288 +65,73 @@ Shape fills all four gaps.
 cp shape.py /your/project/
 ```
 
-That's it. No pip. No dependencies. No config server.
+No pip. No dependencies. No config server.
 
-## 60-Second Demo
+---
 
-```python
-from shape import Agent, ToolEffect
+## Core concepts
 
-# Create a governed agent with a $5 budget
-agent = Agent("customer-service", budget=5.00)
+| Concept | One-liner | Docs |
+|---------|-----------|------|
+| **Phases** | EXPLORE → DECIDE → COMMIT. Controls *when* agents can act | [→ phases](docs/phases.md) |
+| **Effect classification** | READ / REVERSIBLE / IRREVERSIBLE per tool | [→ effects](docs/effects.md) |
+| **Transactions** | All-or-nothing with automatic compensation | [→ transactions](docs/transactions.md) |
+| **Budget gates** | Cost as a control signal, not a log line | [→ budget](docs/budget.md) |
+| **Rule DSL** | Human-readable governance rules | [→ rules](docs/rules.md) |
+| **Proof traces** | Structured record of *why* each call was allowed | [→ traces](docs/traces.md) |
 
-# Register tools with effect classification
-agent.tool("lookup_customer", effect=ToolEffect.READ,         fn=lookup_fn)
-agent.tool("update_record",   effect=ToolEffect.REVERSIBLE,   fn=update_fn)
-agent.tool("send_email",      effect=ToolEffect.IRREVERSIBLE, fn=email_fn)
+---
 
-# Add rules anyone can read
-agent.rules("""
-    BLOCK send_email WHEN phase IS NOT commit
-    BLOCK * WHEN budget ABOVE 90%
-    REQUIRE APPROVAL FOR * WHEN tool IS irreversible
-""")
+## Integration with coding agents
 
-# EXPLORE — read only, safe
-with agent.explore() as ctx:
-    customer = ctx.call("lookup_customer", id="C-1234")
+Shape governs any tool-calling agent via hooks (Architecture A):
 
-# DECIDE — evaluate, propose, no side effects
-with agent.decide() as ctx:
-    plan = ctx.propose(action="send_welcome_email", to=customer["email"])
+| Agent | Directory | Setup |
+|-------|-----------|-------|
+| [Kiro CLI](https://kiro.dev) | [`kiro/`](kiro/README.md) | PreToolUse/PostToolUse hooks |
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`claude/`](claude/README.md) | `.claude/settings.json` hooks |
+| [OpenAI Codex CLI](https://github.com/openai/codex) | [`codex/`](codex/README.md) | Config-based hooks |
 
-# COMMIT — transactional, all-or-nothing
-with agent.commit() as tx:
-    tx.call("update_record", cost=0.01, id="C-1234", status="welcomed")
-    tx.call("send_email",    cost=0.10, to=customer["email"], template="welcome")
-    # if send_email fails → update_record is compensated automatically
-```
+**Limitations (Architecture A):** No transactional atomicity, no compensation, estimated budget, manual phase transitions. See each directory's README for details.
 
-**Three phases. One transaction. Full audit trail. The agent can't skip ahead.**
+For full governance including transactions → use Architecture B (Shape as orchestrator). See [→ architecture](docs/architecture.md).
 
-## How It Works
+---
 
-### Phases — control *when* agents can act
-
-```
-EXPLORE ──→ DECIDE ──→ COMMIT
-   ↑                      │
-   └──────────────────────┘
-```
-
-| Phase | What's allowed | Purpose |
-|-------|---------------|---------|
-| **EXPLORE** | Read only | Gather information safely |
-| **DECIDE** | Read only | Evaluate options, propose actions |
-| **COMMIT** | Read + Write | Execute with transactional protection |
-
-An agent in EXPLORE *cannot* call a write tool. Not "shouldn't" — *cannot*. It raises an exception.
-
-### Effect Classification — know what each tool does
-
-| Effect | Meaning | Example |
-|--------|---------|---------|
-| `READ` | No side effects | Query DB, read file, call GET endpoint |
-| `REVERSIBLE` | Can be undone | Update record (has undo), create draft |
-| `IRREVERSIBLE` | Cannot be undone | Send email, charge card, deploy to prod |
-
-### Transactions — protect multi-step actions
+## Integration with agent frameworks
 
 ```python
-with agent.commit() as tx:
-    tx.call("charge_card",   cost=0.50, amount=99.00)   # step 1
-    tx.call("create_order",  cost=0.01, items=cart)      # step 2
-    tx.call("send_receipt",  cost=0.10, to=email)        # step 3
-```
-
-If step 2 fails: step 1 is compensated (refund). Step 3 never runs.
-
-Register compensation when defining tools:
-
-```python
-agent.tool("charge_card", effect=ToolEffect.REVERSIBLE,
-           fn=charge_fn, compensation=lambda: refund())
-```
-
-### Budget Gates — cost as a control signal, not a log line
-
-Budget isn't just tracked — it *changes agent behavior* at thresholds:
-
-| Spent | What happens |
-|-------|-------------|
-| < 50% | Normal operation |
-| ≥ 50% | **DEGRADE** — signal to reduce scope |
-| ≥ 75% | **FORCE_DECIDE** — blocks COMMIT, forces re-evaluation |
-| ≥ 100% | **STOP** — all tool calls blocked |
-
-Your agent doesn't just run out of money. At 75%, it's *forced to stop and think*.
-
-### Rule DSL — governance anyone can read
-
-```
-BLOCK send_email WHEN phase IS NOT commit
-BLOCK * WHEN budget ABOVE 90%
-REQUIRE APPROVAL FOR * WHEN tool IS irreversible
-FLAG * WHEN time OUTSIDE 09:00-17:00
-```
-
-No Cedar. No Rego. No policy server. Your product manager can read these rules. Your compliance team can write them.
-
-**Syntax:** `ACTION tool WHEN condition [AND condition] [UNLESS condition]`
-
-| Action | Effect |
-|--------|--------|
-| `BLOCK` | Prevent execution |
-| `ALLOW` | Explicitly permit (logged) |
-| `FLAG` | Allow but mark for review |
-| `REQUIRE APPROVAL FOR` | Call approval callback first |
-
-| Condition | Operators | Example |
-|-----------|-----------|---------|
-| `phase` | IS, IS NOT | `phase IS NOT commit` |
-| `tool` | IS, IS NOT | `tool IS irreversible` |
-| `budget` | ABOVE, BELOW | `budget ABOVE 80%` |
-| `time` | OUTSIDE | `time OUTSIDE 06:00-22:00` |
-
-### Proof Traces — know *why* every action was allowed
-
-Every tool call produces a structured decision record:
-
-```python
-{
-    "tool": "send_email",
-    "decision": "ALLOWED",
-    "phase": "commit",
-    "budget_spent": 0.11,
-    "budget_limit": 5.00,
-    "rules_evaluated": [
-        {"check": "phase",  "passed": True,  "detail": "Phase commit allows irreversible"},
-        {"check": "budget", "passed": True,  "detail": "2.2% spent"},
-        {"check": "rule",   "passed": True,  "detail": "Approval granted"},
-    ],
-    "tx_id": "T1",
-    "duration_s": 0.003
-}
-```
-
-Not "what happened" — **why it was permitted**. Every decision. Every rule evaluated. Every trace queryable.
-
-## Integration
-
-Shape wraps callables. If your framework calls functions, Shape governs them.
-
-```python
-# Strands Agents SDK
 from shape import Agent, ToolEffect, wrap_tool
 
 agent = Agent("my-agent", budget=5.00)
 governed_fn = wrap_tool(agent, "my_tool", original_fn, ToolEffect.REVERSIBLE)
-
-# LangGraph, CrewAI, raw Python — same pattern
-agent.tool("any_tool", effect=ToolEffect.READ, fn=any_callable)
 ```
 
-## API Reference
+Works with Strands, LangGraph, CrewAI, or raw Python. If your framework calls functions, Shape governs them. See [→ framework integration](docs/framework-integration.md).
 
-| Method | Description |
-|--------|-------------|
-| `Agent(name, budget=0.0)` | Create a governed agent |
-| `agent.tool(name, effect, fn, compensation)` | Register a tool |
-| `agent.rules(text)` | Add governance rules |
-| `agent.on_approval(callback)` | Set approval handler |
-| `agent.explore()` | Enter EXPLORE phase (read-only) |
-| `agent.decide()` | Enter DECIDE phase (read-only, proposals) |
-| `agent.commit()` | Enter COMMIT phase (transactional) |
-| `agent.traces` | All proof traces |
-| `wrap_tool(agent, name, fn, effect, cost_fn)` | Register + return governed callable |
+---
 
-### Governing LLM Inference Cost
+## How Shape compares
 
-By default, Shape governs tool calls — but the LLM itself burns tokens outside Shape's control. The fix: **wrap the LLM call as a Shape tool.**
-
-```python
-# Without wrapping: LLM burns tokens freely, Shape only sees tools
-# With wrapping: Shape governs EVERYTHING
-
-agent.tool("call_llm",
-           effect=ToolEffect.READ,
-           fn=lambda prompt, **kw: claude.messages.create(
-               model="sonnet", messages=[{"role": "user", "content": prompt}]
-           ),
-           cost_fn=lambda r: r.usage.input_tokens  * 0.000003
-                           + r.usage.output_tokens * 0.000015)
-```
-
-`cost_fn` takes the tool's return value and returns a dollar amount. The cost is recorded *after* execution and affects the *next* call's budget gate — same as a credit card: the purchase that maxes you out goes through, the next one declines.
-
-### Real Agent Loop
-
-In a real agent, the LLM decides which tools to call. Shape governs every call — both the LLM thinking and the tools it requests:
-
-```python
-agent = Agent("my-agent", budget=5.00)
-
-# Wrap the LLM itself — inference cost tracked via cost_fn
-agent.tool("call_llm", effect=ToolEffect.READ, fn=call_claude,
-           cost_fn=lambda r: r.usage.total_tokens * 0.00003)
-
-# Wrap the tools the LLM can request
-agent.tool("read_db",       effect=ToolEffect.READ,         fn=read_db_fn)
-agent.tool("send_email",    effect=ToolEffect.IRREVERSIBLE, fn=send_email_fn)
-agent.tool("update_record", effect=ToolEffect.REVERSIBLE,   fn=update_fn,
-           compensation=undo_update_fn)
-
-# EXPLORE — LLM gathers context, Shape governs every call
-with agent.explore() as ctx:
-    while True:
-        response = ctx.call("call_llm", prompt=history)     # Shape gate → cost_fn
-        if response.stop_reason == "tool_use":
-            result = ctx.call(response.tool_name, **response.tool_args)  # Shape gate
-            history.append(result)
-        else:
-            break
-
-# COMMIT — LLM executes, Shape enforces transactions
-with agent.commit() as tx:
-    while True:
-        response = tx.call("call_llm", prompt=history)      # Shape gate → cost_fn
-        if response.stop_reason == "tool_use":
-            tx.call(response.tool_name, cost=0.10, **response.tool_args)  # Shape gate
-        else:
-            break
-    # if any step fails → earlier steps compensated automatically
-
-# One budget pool. LLM inference + tool costs. One gate for everything.
-```
-
-## How Shape Compares
-
-| Capability | Galileo | AWS AgentCore | Atomix | Shape |
-|-----------|---------|---------------|--------|-------|
+| Capability | Galileo | AWS AgentCore | Atomix | **Shape** |
+|-----------|---------|---------------|--------|-----------|
 | Phase enforcement | ✗ | ✗ | ✗ | ✓ |
 | Transactional tool calls | ✗ | ✗ | ✓ (paper) | ✓ |
 | Compensation / rollback | ✗ | ✗ | partial | ✓ |
-| Tool cost as control signal | ✗ | ✗ | ✗ | ✓ |
-| Inference cost as control signal | ✗ | ✗ | ✗ | ✓ |
-| Proof traces (why, not just what) | ✗ | ✗ | ✗ | ✓ |
+| Cost as control signal | ✗ | ✗ | ✗ | ✓ |
+| Proof traces | ✗ | ✗ | ✗ | ✓ |
 | Readable rule DSL | ✗ | Cedar | ✗ | ✓ |
-| Framework coupling | Galileo SDK | AWS only | academic | None |
-| Dependencies | many | AWS SDK | N/A | zero |
+| Dependencies | many | AWS SDK | N/A | **zero** |
+
+---
 
 ## Testing
 
 ```bash
-python -m pytest test_shape.py -v
-# 58 tests
+python -m pytest test_shape.py -v   # 58 tests
 ```
 
-## Why This Exists
-
-The industry calls it **harness engineering** — designing guardrails, feedback loops, and constraints around AI agents instead of improving the model itself. OpenAI, LangChain, and Martin Fowler have all written about it. Shape is a concrete implementation of the runtime governance slice.
-
-Between December 2025 and March 2026, at least four independent groups arrived at the same insight: AI agents need lifecycle governance. Galileo built observability. AWS built Cedar policies. Atomix formalized transactions. Forrester named the category "Agent Control Plane."
-
-Nobody combined phases + transactions + budget gates + proof traces in one place.
-
-Shape does. In a single file.
-
-## CLI Agent Integrations
-
-Shape can govern existing coding agents via their hook systems (Architecture A: Shape as hook). Each integration enforces phase gates, budget limits, and rule evaluation on every tool call.
-
-| Agent | Directory | Hook mechanism |
-|-------|-----------|---------------|
-| [Kiro CLI](https://kiro.dev) | [`kiro/`](kiro/README.md) | `preToolUse` / `postToolUse` in agent JSON |
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [`claude/`](claude/README.md) | `PreToolUse` / `PostToolUse` in `.claude/settings.json` |
-| [OpenAI Codex CLI](https://github.com/openai/codex) | [`codex/`](codex/README.md) | `pre_tool_use` / `post_tool_use` in config |
-
-**Limitations (Architecture A — all integrations):**
-- No transactional atomicity — each tool call is independent
-- No compensation/rollback on failure
-- Budget is estimated, not actual API cost
-- Phase transitions are manual (user runs `shape-transition`)
-
-For full SHAPE governance including transactions, use Architecture B (SHAPE as orchestrator wrapping the agent).
+---
 
 ## License
 

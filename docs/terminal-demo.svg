@@ -1,0 +1,82 @@
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Terminal demo: the customer service example runs through explore, decide and commit, finishing with 5 tool calls, 5 proof traces, 1 transaction and 0.61 dollars spent.">
+  <defs>
+    <clipPath id="typeClip">
+      <rect class="typew" x="66" y="72" width="333" height="24"/>
+    </clipPath>
+  </defs>
+  <style>
+    text { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace; font-size: 15px; }
+    .dim { fill: #8b949e; } .txt { fill: #e6edf3; } .grn { fill: #3fb950; }
+    .lnk { fill: #7ee787; } .exp { fill: #4a90e2; } .dec { fill: #f5a623; } .com { fill: #7ed321; }
+
+    .typew { animation: type 16s steps(37, end) infinite; }
+    @keyframes type { 0%, 1% { width: 0; } 10%, 100% { width: 333px; } }
+
+    .fade { animation: fadeAll 16s linear infinite; }
+    @keyframes fadeAll { 0%, 96% { opacity: 1; } 99.5%, 100% { opacity: 0; } }
+
+    .a12 { animation: k12 16s linear infinite; } @keyframes k12 { 0%,12% {opacity:0} 14%,100% {opacity:1} }
+    .a15 { animation: k15 16s linear infinite; } @keyframes k15 { 0%,15% {opacity:0} 17%,100% {opacity:1} }
+    .a18 { animation: k18 16s linear infinite; } @keyframes k18 { 0%,18% {opacity:0} 20%,100% {opacity:1} }
+    .a21 { animation: k21 16s linear infinite; } @keyframes k21 { 0%,21% {opacity:0} 23%,100% {opacity:1} }
+    .a25 { animation: k25 16s linear infinite; } @keyframes k25 { 0%,25% {opacity:0} 27%,100% {opacity:1} }
+    .a28 { animation: k28 16s linear infinite; } @keyframes k28 { 0%,28% {opacity:0} 30%,100% {opacity:1} }
+    .a32 { animation: k32 16s linear infinite; } @keyframes k32 { 0%,32% {opacity:0} 34%,100% {opacity:1} }
+    .a35 { animation: k35 16s linear infinite; } @keyframes k35 { 0%,35% {opacity:0} 37%,100% {opacity:1} }
+    .a38 { animation: k38 16s linear infinite; } @keyframes k38 { 0%,38% {opacity:0} 40%,100% {opacity:1} }
+    .a41 { animation: k41 16s linear infinite; } @keyframes k41 { 0%,41% {opacity:0} 43%,100% {opacity:1} }
+    .a45 { animation: k45 16s linear infinite; } @keyframes k45 { 0%,45% {opacity:0} 47%,100% {opacity:1} }
+    .box { animation: kbox 16s linear infinite; }
+    @keyframes kbox { 0%,52% {opacity:0; transform: translateY(8px);} 55%,100% {opacity:1; transform: translateY(0);} }
+    .a60 { animation: k60 16s linear infinite; } @keyframes k60 { 0%,60% {opacity:0} 62%,100% {opacity:1} }
+
+    @media (prefers-reduced-motion: reduce) {
+      .typew, .fade, .a12,.a15,.a18,.a21,.a25,.a28,.a32,.a35,.a38,.a41,.a45,.box,.a60 { animation: none; }
+    }
+  </style>
+
+  <!-- window chrome (never fades) -->
+  <rect x="10" y="8" width="880" height="584" rx="12" fill="#0d1117" stroke="#30363d"/>
+  <path d="M10 44 h880 v-24 a12 12 0 0 0 -12 -12 h-856 a12 12 0 0 0 -12 12 z" fill="#161b22"/>
+  <line x1="10" y1="44" x2="890" y2="44" stroke="#30363d"/>
+  <circle cx="34" cy="26" r="6" fill="#ff5f56"/>
+  <circle cx="56" cy="26" r="6" fill="#ffbd2e"/>
+  <circle cx="78" cy="26" r="6" fill="#27c93f"/>
+  <text x="450" y="31" text-anchor="middle" class="dim" font-size="13">vidanov/shape</text>
+
+  <g class="fade">
+    <text x="48" y="90" class="grn">$</text>
+    <g clip-path="url(#typeClip)">
+      <text x="66" y="90" class="txt">python3 examples/customer_service.py</text>
+    </g>
+
+    <g class="a12">
+      <text x="48" y="126" fill="#f5a623" font-weight="bold">Shape: Customer Service Agent Demo</text>
+      <line x1="380" y1="121" x2="852" y2="121" stroke="#2a3a5e"/>
+    </g>
+
+    <text x="48" y="158" class="a15 exp" font-weight="bold">&#9472;&#9472; EXPLORE (read-only) &#9472;&#9472;</text>
+    <text x="76" y="184" class="a18 txt">Order: $89.99, delivered</text>
+    <text x="76" y="210" class="a21 txt">Policy: eligible (within 30-day window)</text>
+
+    <text x="48" y="240" class="a25 dec" font-weight="bold">&#9472;&#9472; DECIDE (propose, no side effects) &#9472;&#9472;</text>
+    <text x="76" y="266" class="a28 txt">Proposal: refund $89.99</text>
+
+    <text x="48" y="296" class="a32 com" font-weight="bold">&#9472;&#9472; COMMIT (transactional) &#9472;&#9472;</text>
+    <text x="76" y="322" class="a35 txt">[PAYMENT] Refunding $89.99 for order ORD-7891</text>
+    <text x="76" y="348" class="a38 txt">[DB] Order ORD-7891 &#8594; refunded</text>
+    <text x="76" y="374" class="a41 txt">[EMAIL] To: alice@example.com</text>
+    <text x="76" y="402" class="a45 txt">Transaction: <tspan class="grn">committed</tspan><tspan dx="28">Budget: $0.61 / $2.00 (30%)</tspan></text>
+
+    <!-- success box: the payoff -->
+    <g class="box">
+      <rect x="48" y="426" width="804" height="106" rx="10" fill="#0f1c14" stroke="#2ea043" stroke-width="1.5"/>
+      <text x="76" y="460" class="grn" font-weight="bold">GOVERNED RUN COMPLETE</text>
+      <circle cx="83" cy="491" r="5" fill="#3fb950"/>
+      <text x="100" y="497" class="lnk" font-size="16">5 tool calls &#183; 5 proof traces &#183; 1 transaction &#183; $0.61 spent</text>
+      <text x="76" y="521" class="dim" font-size="14">if send_email had failed, process_refund would be compensated</text>
+    </g>
+
+    <text x="48" y="566" class="a60 dim">$ python3 examples/manufacturing.py   # approval gates, after-hours rules</text>
+  </g>
+</svg>

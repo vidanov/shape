@@ -1,0 +1,115 @@
+<svg viewBox="0 0 1200 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shape architecture: the explore, decide, commit lifecycle on top; the per-call gate below: phase check, budget gate, rules, execute, proof trace; blocked calls raise RuleViolation and still get a trace.">
+  <defs>
+    <linearGradient id="abg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#141d33"/>
+    </linearGradient>
+    <pattern id="agrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.2" fill="#24304f"/>
+    </pattern>
+    <marker id="am" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#6b7a99"/>
+    </marker>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#f85149"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="700" rx="16" fill="url(#abg)"/>
+  <rect width="1200" height="700" rx="16" fill="url(#agrid)" opacity="0.5"/>
+  <rect x="0.5" y="0.5" width="1199" height="699" rx="15.5" fill="none" stroke="#2a3a5e"/>
+
+  <g font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+
+    <!-- Row 1: lifecycle -->
+    <text x="60" y="66" font-size="14" font-weight="700" letter-spacing="3" fill="#8b95a9">LIFECYCLE</text>
+
+    <rect x="60" y="86" width="300" height="150" rx="14" fill="#101a30" stroke="#4a90e2" stroke-width="2"/>
+    <circle cx="88" cy="120" r="7" fill="#4a90e2"/>
+    <text x="104" y="126" font-size="19" font-weight="700" fill="#f2f5fa">EXPLORE</text>
+    <text x="88" y="158" font-size="14" fill="#7ee787">&#10003; read</text>
+    <text x="88" y="182" font-size="14" fill="#f85149">&#10007; reversible</text>
+    <text x="88" y="206" font-size="14" fill="#f85149">&#10007; irreversible</text>
+    <text x="332" y="216" text-anchor="end" font-size="12.5" fill="#8b95a9">gather information</text>
+
+    <rect x="450" y="86" width="300" height="150" rx="14" fill="#101a30" stroke="#f5a623" stroke-width="2"/>
+    <circle cx="478" cy="120" r="7" fill="#f5a623"/>
+    <text x="494" y="126" font-size="19" font-weight="700" fill="#f2f5fa">DECIDE</text>
+    <text x="478" y="158" font-size="14" fill="#7ee787">&#10003; read + propose()</text>
+    <text x="478" y="182" font-size="14" fill="#f85149">&#10007; reversible</text>
+    <text x="478" y="206" font-size="14" fill="#f85149">&#10007; irreversible</text>
+    <text x="722" y="216" text-anchor="end" font-size="12.5" fill="#8b95a9">plan, no side effects</text>
+
+    <rect x="840" y="86" width="300" height="150" rx="14" fill="#101a30" stroke="#7ed321" stroke-width="2"/>
+    <circle cx="868" cy="120" r="7" fill="#7ed321"/>
+    <text x="884" y="126" font-size="19" font-weight="700" fill="#f2f5fa">COMMIT</text>
+    <text x="868" y="158" font-size="14" fill="#7ee787">&#10003; read</text>
+    <text x="868" y="182" font-size="14" fill="#7ee787">&#10003; reversible</text>
+    <text x="868" y="206" font-size="14" fill="#7ee787">&#10003; irreversible</text>
+    <text x="1112" y="216" text-anchor="end" font-size="12.5" fill="#8b95a9">inside a transaction</text>
+
+    <path d="M366 161 L442 161" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+    <path d="M756 161 L832 161" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+
+    <!-- loop back, routed below the row -->
+    <path d="M990 236 L990 272 L210 272 L210 244" stroke="#6b7a99" stroke-width="2" fill="none" marker-end="url(#am)"/>
+    <text x="600" y="264" text-anchor="middle" font-size="13" fill="#8b95a9">back to explore for the next task (forced above 75% budget)</text>
+
+    <!-- Row 2: the gate -->
+    <text x="60" y="336" font-size="14" font-weight="700" letter-spacing="3" fill="#8b95a9">THE GATE &#183; RUNS ON EVERY TOOL CALL</text>
+
+    <rect x="60" y="356" width="220" height="66" rx="12" fill="#0d1117" stroke="#2f3f63" stroke-width="1.5"/>
+    <text x="170" y="384" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="14" fill="#e6edf3">tx.call("send_email")</text>
+    <text x="170" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">any registered tool</text>
+
+    <rect x="310" y="356" width="152" height="66" rx="12" fill="#182238" stroke="#4a90e2" stroke-width="1.5"/>
+    <text x="386" y="384" text-anchor="middle" font-size="15" font-weight="600" fill="#e6edf3">phase check</text>
+    <text x="386" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">effect vs phase</text>
+
+    <rect x="492" y="356" width="152" height="66" rx="12" fill="#182238" stroke="#f5a623" stroke-width="1.5"/>
+    <text x="568" y="384" text-anchor="middle" font-size="15" font-weight="600" fill="#e6edf3">budget gate</text>
+    <text x="568" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">50 / 75 / 100% + slope</text>
+
+    <rect x="674" y="356" width="152" height="66" rx="12" fill="#182238" stroke="#bd6bd6" stroke-width="1.5"/>
+    <text x="750" y="384" text-anchor="middle" font-size="15" font-weight="600" fill="#e6edf3">rule DSL</text>
+    <text x="750" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">BLOCK, FLAG, APPROVE</text>
+
+    <rect x="856" y="356" width="120" height="66" rx="12" fill="#182238" stroke="#2f3f63" stroke-width="1.5"/>
+    <text x="916" y="384" text-anchor="middle" font-size="15" font-weight="600" fill="#e6edf3">execute</text>
+    <text x="916" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">cost recorded</text>
+
+    <rect x="1006" y="356" width="134" height="66" rx="12" fill="#12241c" stroke="#2ea043" stroke-width="1.5"/>
+    <text x="1073" y="384" text-anchor="middle" font-size="15" font-weight="600" fill="#7ee787">proof trace</text>
+    <text x="1073" y="406" text-anchor="middle" font-size="12.5" fill="#8b95a9">why it was allowed</text>
+
+    <path d="M280 389 L304 389" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+    <path d="M462 389 L486 389" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+    <path d="M644 389 L668 389" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+    <path d="M826 389 L850 389" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+    <path d="M976 389 L1000 389" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#am)"/>
+
+    <!-- blocked branch -->
+    <path d="M386 422 L386 458" stroke="#f85149" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M568 422 L568 458" stroke="#f85149" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M750 422 L750 458" stroke="#f85149" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <rect x="310" y="464" width="516" height="58" rx="12" fill="#2d1215" stroke="#f85149" stroke-width="1.5"/>
+    <text x="568" y="489" text-anchor="middle" font-size="15" font-weight="600" fill="#f85149">&#10007; BLOCKED: raises RuleViolation</text>
+    <text x="568" y="510" text-anchor="middle" font-size="12.5" fill="#c8938f">the proof trace is still written, so audits see denials too</text>
+
+    <!-- compensation note -->
+    <rect x="856" y="464" width="284" height="58" rx="12" fill="#101a30" stroke="#2a3a5e" stroke-width="1.5"/>
+    <text x="998" y="489" text-anchor="middle" font-size="13.5" fill="#c7d0e0">a step fails mid-transaction:</text>
+    <text x="998" y="510" text-anchor="middle" font-size="13.5" fill="#c7d0e0">compensations run in reverse order</text>
+
+    <!-- Row 3: two ways to run it -->
+    <text x="60" y="590" font-size="14" font-weight="700" letter-spacing="3" fill="#8b95a9">TWO WAYS TO RUN IT</text>
+
+    <rect x="60" y="606" width="530" height="64" rx="12" fill="#101a30" stroke="#2a3a5e" stroke-width="1.5"/>
+    <text x="88" y="632" font-size="15" font-weight="700" fill="#e6edf3">Library <tspan fill="#7ed321">(Architecture B)</tspan></text>
+    <text x="88" y="654" font-size="13" fill="#8b95a9">import shape: phases, budget, rules, transactions, compensation</text>
+
+    <rect x="620" y="606" width="520" height="64" rx="12" fill="#101a30" stroke="#2a3a5e" stroke-width="1.5"/>
+    <text x="648" y="632" font-size="15" font-weight="700" fill="#e6edf3">Hooks <tspan fill="#f5a623">(Architecture A)</tspan></text>
+    <text x="648" y="654" font-size="13" fill="#8b95a9">gate.py for Kiro, Claude Code, Codex: phase + budget + rules only</text>
+  </g>
+</svg>

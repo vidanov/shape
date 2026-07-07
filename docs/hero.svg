@@ -1,0 +1,75 @@
+<svg viewBox="0 0 1280 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Shape: hard limits for AI agents. One Python file, zero dependencies. The same tool call passes in commit phase and is blocked in explore phase.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#141d33"/>
+    </linearGradient>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.2" fill="#24304f"/>
+    </pattern>
+    <marker id="arrOk" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#7ed321"/>
+    </marker>
+    <marker id="arrNo" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#f85149"/>
+    </marker>
+    <marker id="arrMut" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#6b7a99"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="360" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="360" rx="16" fill="url(#grid)" opacity="0.5"/>
+  <rect x="0.5" y="0.5" width="1279" height="359" rx="15.5" fill="none" stroke="#2a3a5e"/>
+
+  <g font-family="-apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+    <text x="64" y="92" font-size="16" letter-spacing="4" font-weight="600" fill="#7ed321">AGENT GOVERNANCE &#183; ONE PYTHON FILE</text>
+    <text x="62" y="150" font-size="54" font-weight="800" fill="#f2f5fa">Shape</text>
+    <circle cx="248" cy="132" r="9" fill="#4a90e2"/>
+    <circle cx="276" cy="132" r="9" fill="#f5a623"/>
+    <circle cx="304" cy="132" r="9" fill="#7ed321"/>
+    <text x="64" y="196" font-size="23" font-weight="600" fill="#c7d0e0">Prompts are suggestions. <tspan fill="#7ed321" font-weight="700">Shape is enforcement.</tspan></text>
+
+    <rect x="64" y="226" width="360" height="46" rx="10" fill="#0d1117" stroke="#2f3f63"/>
+    <text x="86" y="255" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="18" fill="#7ee787">$ <tspan fill="#e6edf3">cp shape.py your_project/</tspan></text>
+
+    <g font-size="14" font-weight="600">
+      <rect x="64" y="292" width="146" height="30" rx="15" fill="#182238" stroke="#2a3a5e"/>
+      <text x="137" y="311" text-anchor="middle" fill="#c7d0e0">zero dependencies</text>
+      <rect x="220" y="292" width="94" height="30" rx="15" fill="#182238" stroke="#2a3a5e"/>
+      <text x="267" y="311" text-anchor="middle" fill="#c7d0e0">509 lines</text>
+      <rect x="324" y="292" width="88" height="30" rx="15" fill="#182238" stroke="#2a3a5e"/>
+      <text x="368" y="311" text-anchor="middle" fill="#c7d0e0">62 tests</text>
+      <rect x="422" y="292" width="62" height="30" rx="15" fill="#182238" stroke="#2a3a5e"/>
+      <text x="453" y="311" text-anchor="middle" fill="#c7d0e0">MIT</text>
+    </g>
+
+    <!-- right motif: the gate -->
+    <rect x="768" y="158" width="84" height="44" rx="10" fill="#182238" stroke="#2f3f63"/>
+    <text x="810" y="185" text-anchor="middle" font-size="15" fill="#c7d0e0">agent</text>
+    <path d="M852 180 L880 180" stroke="#6b7a99" stroke-width="2.5" fill="none" marker-end="url(#arrMut)"/>
+
+    <rect x="886" y="78" width="118" height="224" rx="14" fill="#101a30" stroke="#2f3f63" stroke-width="1.5"/>
+    <text x="945" y="110" text-anchor="middle" font-size="16" font-weight="700" letter-spacing="2" fill="#f2f5fa">SHAPE</text>
+    <circle cx="912" cy="146" r="7" fill="#4a90e2"/>
+    <text x="928" y="151" font-size="13" fill="#8b95a9">explore</text>
+    <circle cx="912" cy="190" r="7" fill="#f5a623"/>
+    <text x="928" y="195" font-size="13" fill="#8b95a9">decide</text>
+    <circle cx="912" cy="234" r="7" fill="#7ed321"/>
+    <text x="928" y="239" font-size="13" fill="#8b95a9">commit</text>
+    <text x="945" y="280" text-anchor="middle" font-size="12.5" fill="#6b7a99">phase &#183; budget &#183; rules</text>
+
+    <path d="M1004 150 L1032 140" stroke="#7ed321" stroke-width="2.5" fill="none" marker-end="url(#arrOk)"/>
+    <path d="M1004 230 L1032 240" stroke="#f85149" stroke-width="2.5" fill="none" marker-end="url(#arrNo)"/>
+
+    <rect x="1038" y="112" width="180" height="52" rx="10" fill="#12241c" stroke="#2ea043" stroke-width="1.5"/>
+    <text x="1054" y="134" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="14" fill="#7ee787">&#10003; send_email</text>
+    <text x="1054" y="153" font-size="12.5" fill="#8b95a9">phase: commit</text>
+
+    <rect x="1038" y="216" width="180" height="52" rx="10" fill="#2d1215" stroke="#f85149" stroke-width="1.5"/>
+    <text x="1054" y="238" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="14" fill="#f85149">&#10007; send_email</text>
+    <text x="1054" y="257" font-size="12.5" fill="#8b95a9">phase: explore</text>
+
+    <text x="993" y="330" text-anchor="middle" font-size="13" fill="#8b95a9">same tool, same agent, different phase</text>
+  </g>
+</svg>

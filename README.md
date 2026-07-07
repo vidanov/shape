@@ -246,5 +246,12 @@ Run `python3 -m pytest test_shape.py -q` before opening the PR; all 62 should st
 MIT, see [LICENSE](LICENSE).
 
 <div align="center">
-  <sub>Built by <a href="https://github.com/vidanov">Alexei Vidanov</a> · <a href="https://vidanov.github.io/shape/">explainer</a> · <a href="https://vidanov.github.io/shape/demo.html">live demo</a></sub>
+  <sub>Built by <a href="https://github.com/vidanov">Alexey Vidanov</a> · <a href="https://vidanov.github.io/shape/">explainer</a> · <a href="https://vidanov.github.io/shape/demo.html">live demo</a></sub>
 </div>
+
+---
+
+## Also by the author
+
+- [writing-craft-skill](https://github.com/vidanov/writing-craft-skill): teach AI agents to write well using classic copywriting craft plus AI anti-pattern detection
+- [aws-architecture-diagram-skill](https://github.com/vidanov/aws-architecture-diagram-skill): generate AWS architecture diagrams as draw.io files with 270+ verified icons

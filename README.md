@@ -253,5 +253,6 @@ MIT, see [LICENSE](LICENSE).
 
 ## Also by the author
 
+- **[ai-ready-repo](https://github.com/vidanov/ai-ready-repo)** — make any repository AI-agent-ready with executable guardrails, failure fixtures and import boundaries. Shape enforces limits at runtime; ai-ready-repo enforces them at the repo level.
 - [writing-craft-skill](https://github.com/vidanov/writing-craft-skill): teach AI agents to write well using classic copywriting craft plus AI anti-pattern detection
 - [aws-architecture-diagram-skill](https://github.com/vidanov/aws-architecture-diagram-skill): generate AWS architecture diagrams as draw.io files with 270+ verified icons
